@@ -12,6 +12,6 @@ s.recSampleFormat_("int24");
 s.quit;
 s.makeGui;
 
-s.prepareForRecord("/Volumes/ALEX_BUCK_2T_USBC/MADRIGALE_A_SEI_VASI/PERFORMANCE/sabado.aif");
-s.record;
-s.stopRecording;
+//s.prepareForRecord("/Volumes/ALEX_BUCK_2T_USBC/MADRIGALE_A_SEI_VASI/PERFORMANCE/sabado.aif");
+//s.record;
+//s.stopRecording;
