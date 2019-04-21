@@ -1,9 +1,10 @@
 #!/bin/bash
 
+#tinha um 'i' estranho no final dos PID's
 
-PRO_PID=$(ps -Fa | grep alsa_out | grep 'hw:Pro,1' | awk '{print $2;}'i)
+PRO_PID=$(ps -Fa | grep alsa_out | grep 'hw:Pro,1' | awk '{print $2;}')
 
-H5_PID=$(ps -Fa | grep alsa_out | grep 'hw:H5' | awk '{print $2;}'i)
+H5_PID=$(ps -Fa | grep alsa_out | grep 'hw:H5' | awk '{print $2;}')
 
 kill $PRO_PID $H5_PID
 
