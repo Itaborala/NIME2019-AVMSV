@@ -4,7 +4,7 @@ JV_WORKSPACE=4
 
 echo "jack-volume Starting Up..."
 
-gnome-terminal --working-directory=NIME2019/shellScripts -- "./jack-volume_w_flags.sh"
+gnome-terminal --working-directory=NIME2019-AVMSV/shellScripts -- "./jack-volume_w_flags.sh"
 
 ../jack-volume/jvctl.py &
 

@@ -6,6 +6,7 @@ s.options.numInputBusChannels = 2;
 )
 
 "SC_JACK_DEFAULT_INPUTS".setenv("system:capture_1,system:capture_2");
+"SC_JACK_DEFAULT_OUTPUTS".setenv("jack-volume:input_1,jack-volume:input_2,jack-volume:input_3,jack-volume:input_4,jack-volume:input_5,jack-volume:input_6");
 
 s.boot;
 s.recSampleFormat_("int24");

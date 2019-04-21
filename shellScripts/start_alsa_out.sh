@@ -4,9 +4,9 @@ ALSAO_WORKSPACE=3
 
 echo "alsa_out Starting Up..."
 
-gnome-terminal --working-directory=NIME2019/shellScripts -- "./alsa_out_w_flags_Pro.sh"
+gnome-terminal --working-directory=NIME2019-AVMSV/shellScripts -- "./alsa_out_w_flags_Pro.sh"
 
-gnome-terminal --working-directory=NIME2019/shellScripts -- "./alsa_out_w_flags_H5.sh"
+gnome-terminal --working-directory=NIME2019-AVMSV/shellScripts -- "./alsa_out_w_flags_H5.sh"
 
 sleep 0.1
 
