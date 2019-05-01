@@ -1,4 +1,4 @@
-#N canvas 1 41 958 1015 10;
+#N canvas 961 41 958 485 10;
 #X obj 150 313 osc~;
 #X obj 187 316 osc~;
 #X obj 222 323 osc~;
@@ -8,46 +8,55 @@
 #X obj 549 426 *~;
 #X obj 610 427 *~;
 #X obj 86 152 hsl 128 15 100 1000 0 0 empty empty empty -2 -8 0 10
--262144 -1 -1 8500 1;
+-262144 -1 -1 2600 1;
 #X obj 564 209 vsl 15 128 0 1 0 0 empty empty empty 0 -9 0 10 -262144
--1 -1 9100 1;
+-1 -1 0 1;
 #X obj 116 182 hsl 128 15 100 1000 0 0 empty empty empty -2 -8 0 10
--262144 -1 -1 7500 1;
+-262144 -1 -1 5100 1;
 #X obj 146 213 hsl 128 15 100 1000 0 0 empty empty empty -2 -8 0 10
--262144 -1 -1 10400 1;
+-262144 -1 -1 0 1;
 #X obj 176 242 hsl 128 15 100 1000 0 0 empty empty empty -2 -8 0 10
--262144 -1 -1 10800 1;
+-262144 -1 -1 0 1;
 #X obj 564 389 line~;
 #X msg 564 363 \$1 10;
 #X obj 624 209 vsl 15 128 0 1 0 0 empty empty empty 0 -9 0 10 -262144
--1 -1 8700 1;
+-1 -1 0 1;
 #X obj 624 388 line~;
 #X msg 624 362 \$1 10;
 #X obj 504 209 vsl 15 128 0 1 0 0 empty empty empty 0 -9 0 10 -262144
--1 -1 6000 1;
+-1 -1 200 1;
 #X obj 504 388 line~;
 #X msg 504 362 \$1 10;
 #X obj 445 200 vsl 15 128 0 1 0 0 empty empty empty 0 -9 0 10 -262144
--1 -1 4150 1;
+-1 -1 250 1;
 #X obj 444 388 line~;
 #X msg 444 362 \$1 10;
 #X obj 669 426 *~;
 #X obj 730 427 *~;
 #X obj 685 198 vsl 15 128 0 1 0 0 empty empty empty 0 -9 0 10 -262144
--1 -1 6750 1;
+-1 -1 0 1;
 #X obj 684 389 line~;
 #X msg 684 363 \$1 10;
 #X obj 744 207 vsl 15 128 0 1 0 0 empty empty empty 0 -9 0 10 -262144
--1 -1 6650 1;
+-1 -1 0 1;
 #X obj 744 388 line~;
 #X msg 744 362 \$1 10;
 #X obj 294 343 osc~;
 #X obj 335 349 osc~;
 #X obj 257 270 hsl 128 15 100 1000 0 0 empty empty empty -2 -8 0 10
--262144 -1 -1 4850 1;
+-262144 -1 -1 0 1;
 #X obj 287 299 hsl 128 15 100 1000 0 0 empty empty empty -2 -8 0 10
--262144 -1 -1 6250 1;
+-262144 -1 -1 0 1;
 #X obj 420 608 dac~ 1 2 3 4 5 6;
+#X obj 149 24 hsl 128 15 0 1 0 0 empty empty empty -2 -8 0 10 -262144
+-1 -1 8250 1;
+#X obj 148 51 oscformat net/mhcloud/volume/jack-volume/master;
+#X obj 337 159 print p;
+#X obj 315 137 oscparse;
+#X obj 454 117 list prepend send;
+#X obj 454 139 list trim;
+#X obj 535 171 netsend -u -b;
+#X msg 658 121 connect localhost 7600;
 #X connect 0 0 4 0;
 #X connect 1 0 5 0;
 #X connect 2 0 6 0;
@@ -84,3 +93,10 @@
 #X connect 33 0 25 0;
 #X connect 34 0 32 0;
 #X connect 35 0 33 0;
+#X connect 37 0 38 0;
+#X connect 38 0 40 0;
+#X connect 38 0 41 0;
+#X connect 40 0 39 0;
+#X connect 41 0 42 0;
+#X connect 42 0 43 0;
+#X connect 44 0 43 0;
