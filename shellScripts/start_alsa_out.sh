@@ -1,6 +1,6 @@
 #!/bin/bash
 
-ALSAO_WORKSPACE=3
+ALSAO_WORKSPACE=6
 
 echo "alsa_out Starting Up..."
 
