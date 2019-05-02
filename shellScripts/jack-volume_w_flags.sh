@@ -1,3 +1,3 @@
 #!/bin/bash
 
-jack-volume -n 6
+jack-volume -c 'Volume_Master' -n 6
