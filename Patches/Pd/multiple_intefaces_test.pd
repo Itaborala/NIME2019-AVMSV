@@ -1,4 +1,4 @@
-#N canvas 961 41 958 485 10;
+#N canvas 1 41 958 1015 10;
 #X obj 150 313 osc~;
 #X obj 187 316 osc~;
 #X obj 222 323 osc~;
@@ -8,11 +8,11 @@
 #X obj 549 426 *~;
 #X obj 610 427 *~;
 #X obj 86 152 hsl 128 15 100 1000 0 0 empty empty empty -2 -8 0 10
--262144 -1 -1 2600 1;
+-262144 -1 -1 0 1;
 #X obj 564 209 vsl 15 128 0 1 0 0 empty empty empty 0 -9 0 10 -262144
 -1 -1 0 1;
 #X obj 116 182 hsl 128 15 100 1000 0 0 empty empty empty -2 -8 0 10
--262144 -1 -1 5100 1;
+-262144 -1 -1 0 1;
 #X obj 146 213 hsl 128 15 100 1000 0 0 empty empty empty -2 -8 0 10
 -262144 -1 -1 0 1;
 #X obj 176 242 hsl 128 15 100 1000 0 0 empty empty empty -2 -8 0 10
@@ -24,11 +24,11 @@
 #X obj 624 388 line~;
 #X msg 624 362 \$1 10;
 #X obj 504 209 vsl 15 128 0 1 0 0 empty empty empty 0 -9 0 10 -262144
--1 -1 200 1;
+-1 -1 0 1;
 #X obj 504 388 line~;
 #X msg 504 362 \$1 10;
 #X obj 445 200 vsl 15 128 0 1 0 0 empty empty empty 0 -9 0 10 -262144
--1 -1 250 1;
+-1 -1 0 1;
 #X obj 444 388 line~;
 #X msg 444 362 \$1 10;
 #X obj 669 426 *~;
@@ -49,7 +49,7 @@
 -262144 -1 -1 0 1;
 #X obj 420 608 dac~ 1 2 3 4 5 6;
 #X obj 149 24 hsl 128 15 0 1 0 0 empty empty empty -2 -8 0 10 -262144
--1 -1 8250 1;
+-1 -1 0 1;
 #X obj 148 51 oscformat net/mhcloud/volume/jack-volume/master;
 #X obj 337 159 print p;
 #X obj 315 137 oscparse;
@@ -57,6 +57,7 @@
 #X obj 454 139 list trim;
 #X obj 535 171 netsend -u -b;
 #X msg 658 121 connect localhost 7600;
+#X obj 150 574 vbap;
 #X connect 0 0 4 0;
 #X connect 1 0 5 0;
 #X connect 2 0 6 0;
