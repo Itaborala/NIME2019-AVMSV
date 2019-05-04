@@ -6,10 +6,20 @@
 
 ./disconnect_jack-volume_alsa_out.sh
 
+./disconnect_pd_jack-volume.sh
 
 
 #-------------KILL CLIENTS__________________#
 
+sleep 0.5
+
+./stop_SCide.sh
+
+sleep 2
+
+./stop_pd.sh
+
+sleep 2
 
 ./stop_vbap_jack_volume.sh
 

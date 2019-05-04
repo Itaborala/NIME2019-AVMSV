@@ -14,9 +14,15 @@ sleep 2
 
 ./start_vbap_jack_volume.sh
 
+sleep 2
 
+./start_pd.sh
 
+sleep 2
 
+./start_SCide.sh
+
+sleep 1
 
 #-------------JACK CONNECTIONS--------------#
 
@@ -24,6 +30,8 @@ sleep 2
 
 sleep 0.5
 
-#./connect_pd_jack-volume.sh
+./connect_pd_jack-volume.sh
+
+sleep 1
 
 echo "Acting Voices - Madrigale a Sei Vasi"
