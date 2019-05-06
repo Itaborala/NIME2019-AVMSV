@@ -31,7 +31,7 @@ s.makeGui;
 ~paths = List[];
 
 //paths = Pipe.new("ls ../Sons/Vozes_Luana_BRC_Estudios/", "r");
-paths = Pipe.new("ls NIME2019-AVMSV/Sons/ESTRUTURAS/VOZ_LUANA", "r");
+paths = Pipe.new("ls ../Sons/ESTRUTURAS/VOZ_LUANA", "r");
 
 
 soundPath = paths.getLine;
@@ -81,24 +81,24 @@ y.free
 OpenObject.start
 
 (
-SynthDef(\diskin8, {|out, bufnumbe=0|
-	Out.ar(out, DiskIn.ar(1, bufnumbe))
+SynthDef(\diskin6, {|out, bufnum=0|
+	Out.ar(out, DiskIn.ar(1, bufnum))
 }).add
 )
 
-y = Synth.new(\diskin8)
+y = Synth.new(\diskin6)
 
-n = { arg buf; y.addToHeadMsg(nil,  [\bufnumbe, buf.bufnum])};
+n = { arg buf; y.addToHeadMsg(nil,  [\bufnum, buf.bufnum])};
 (var len;
 
 len = ~paths.size;
 
 
-k = Buffer.cueSoundFile(s, "NIME2019-AVMSV/Sons/ESTRUTURAS/VOZ_LUANA/" +/+ ~paths.wchoose(1/len !len ), 0, 1, completionMessage: n);
+k = Buffer.cueSoundFile(s, "../Sons/ESTRUTURAS/VOZ_LUANA/" +/+ ~paths.wchoose(1/len !len ), 0, 1, completionMessage: n);
 
 
 )
-s.scope
+k.close
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
