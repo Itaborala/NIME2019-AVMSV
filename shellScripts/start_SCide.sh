@@ -6,7 +6,7 @@ echo "scide Starting Up..."
 
 scide ../Patches/SC/AV-MSV.scd &
 
-sleep 1
+sleep 2
 
 SC_WIN_ARG=$(wmctrl -l | grep 'SuperCollider' | grep 'IDE' | sort -r | awk '{print $1;}')
 

@@ -6,7 +6,7 @@ echo "purr-data Starting Up..."
 
 purr-data &
 
-sleep 2
+sleep 3
 
 PD_WIN_ARG=$(wmctrl -l | grep 'purr-data' | sort -r | awk '{print $1;}')
 PEO_WIN_ARG=$(wmctrl -l | grep 'Profile' | sort -r | awk '{print $1;}')
