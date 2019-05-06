@@ -12,7 +12,7 @@ s.options.numInputBusChannels = 2;
 )
 (
 s.boot;
-OpenObject.start
+//OpenObject.start
 )
 
 s.recSampleFormat_("int24");
@@ -51,15 +51,16 @@ paths.close;
 (var len;
 
 len = ~paths.size;
-k = Buffer.cueSoundFile(s, "/home/itaborala/NIME2019-AVMSV/Sons/ESTRUTURAS/VOZ_LUANA/" ++ ~paths.wchoose(1/len !len ));
-//"../Sons/Vozes_Luana_BRC_Estudios" ++ "d"
+k = Buffer.cueSoundFile(s, "../Sons/ESTRUTURAS/VOZ_LUANA/" +/+ ~paths.wchoose(1/len !len ), 0, 1);
+
+
 )
 
 (var len;
 
 len = ~paths.size;
 k = Buffer.read(s, "../Sons/ESTRUTURAS/VOZ_LUANA/" ++ ~paths.wchoose(1/len !len ));
-
+k.close
 )
 
 
@@ -67,8 +68,10 @@ k = Buffer.read(s, "../Sons/ESTRUTURAS/VOZ_LUANA/" ++ ~paths.wchoose(1/len !len 
 k.plot
 k.bufnum
 k.close
-y = { PlayBuf.ar(1, 30) }.play
-x = { DiskIn.ar(1, 29) }.play;
+y = { PlayBuf.ar(1, k.bufnum) }.play
+x = { DiskIn.ar(1, k.bufnum) }.play;
+
+{SinOsc.ar}.play
 
 x.free
 y.free
@@ -77,7 +80,7 @@ y.free
 
 OpenObject.start
 
-
+Platform.resourceDir
 
 
 
