@@ -181,6 +181,62 @@ SynthDef(\modulator, {
 ~testSynth.map(\freq, ~bus);
 
 
+
+//-------------Node messaging
+
+(
+SynthDef("grain", {
+    Out.ar(0, Line.kr(0.1, 0, 0.01, doneAction: Done.freeSelf) * FSinOsc.ar(12000))
+}).send(s);
+)
+
+(
+Routine({
+    20.do({
+        s.sendMsg("/s_new", "grain", -1);
+        0.01.wait;
+    })
+}).play;
+)
+
+//--------Last diskin implementation
+
+
+(
+SynthDef(\diskin6, {
+
+	Out.ar(\out.kr(0), PanAz.ar(6, DiskIn.ar(1, \bufnum.kr(0)), -1, orientation: \orientatio.kr(0.0) ));
+}).add
+)
+(
+x = Synth.basicNew(\diskin6);
+m = { arg buf; x.addToHeadMsg(nil, [\bufnum, buf.bufnum])};
+)
+(
+var len;
+len = ~paths.size;
+
+x = Synth.basicNew(\diskin6);
+m = { arg buf; x.addToHeadMsg(nil, [\bufnum, buf.bufnum])};
+
+k = Buffer.cueSoundFile(s, ~folder +/+ ~paths.wchoose(1/len !len ), 0, 1, completionMessage: m);
+)
+
+x.addToHeadMsg(nil, [\orientatio, {MouseX.kr(-2.0, 2.0)}])
+
+x.set(\orientatio, -0.99)
+x.set(\orientatio, -2.0)
+//orientation channels: -3.0, 2.0, -0.99, 0.0, 1.0, 2.01
+
+s.queryAllNodes
+x.free
+x.trace
+s.scope
+k.close
+x
+map
+
+
 /////////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////// EXPLORING AND TUTORIALS SECTION ////////////////////////////////////
 ~buz = Bus.audio(s, 6)
