@@ -25,14 +25,14 @@ s.makeGui;
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 ~folder = "../Sons/ESTRUTURAS/VOZ_LUANA/";
-//~folder = "../Sons/Vasos_Camila/;
+//~folder = "../Sons/Vasos_Camila/";
 
 (var paths, soundPath;
 
 ~paths = List[];
 
 //paths = Pipe.new("ls ../Sons/Vozes_Luana_BRC_Estudios/", "r");
-paths = Pipe.new("ls ../Sons/ESTRUTURAS/VOZ_LUANA", "r");
+paths = Pipe.new("ls " + ~folder, "r");
 
 
 soundPath = paths.getLine;
@@ -47,9 +47,44 @@ paths.close;
 /////////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////// SYNTHDEF SECTION //////////////////////////////////////////
 
+//---------- Changing to PlayBuf
+
+(
+SynthDef(\playbuf6, {
+
+	Out.ar(\out.kr(0), PanAz.ar(6, PlayBuf.ar(1, \bufnum.kr(0)), -1, orientation: \orientatio.kr(0.0) ));
+}).add
+)
+(
+x = Synth.basicNew(\playbuf6);
+m = { arg buf; x.addToHeadMsg(nil, [\bufnum, buf.bufnum])};
+)
+(
+var len;
+len = ~paths.size;
 
 
-//---------- Inserting static control
+m = { arg buf; buf.close; x = Synth.new(\playbuf6, [\bufnum, buf.bufnum])};
+
+k = Buffer.read(s, ~folder +/+ ~paths.wchoose(1/len !len ), action: m);
+//k.close
+)
+
+
+
+s.queryAllNodes
+x.free
+x.trace
+s.scope
+k.close
+x.run
+x.set([\trigg, 0.0])
+x
+k
+k.free
+map
+//----
+//---------- Inserting UGen control
 
 (
 SynthDef(\diskin6, {
@@ -74,6 +109,7 @@ k = Buffer.cueSoundFile(s, ~folder +/+ ~paths.wchoose(1/len !len ), 0, 1, comple
 x.addToHeadMsg(nil, [\orientatio, {MouseX.kr(-2.0, 2.0)}])
 
 x.set(\orientatio, -0.99)
+x.set(\orientatio, -2.0)
 //orientation channels: -3.0, 2.0, -0.99, 0.0, 1.0, 2.01
 
 s.queryAllNodes
@@ -81,6 +117,7 @@ x.free
 x.trace
 s.scope
 k.close
+x
 map
 //----------------Control Synthdefs
 
