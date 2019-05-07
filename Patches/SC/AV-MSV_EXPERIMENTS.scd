@@ -163,6 +163,23 @@ map
 
 //--------- Control with UGens using Buses and control Synths
 
+//----------------Control Synthdef
+
+(
+SynthDef(\test, {
+	Out.ar(\out.ar(0), SinOsc.ar(\freq.kr(440) ! 2));
+}).add;
+)
+(
+SynthDef(\modulator, {
+	Out.kr(\out.kr(0), SinOsc.kr(\freq.kr(1)).range(440,600));
+}).add;
+)
+~bus = Bus.control(s,1);
+~testSynth = Synth(\test);
+~modulatorSynth = Synth(\modulator, [out: ~bus]);
+~testSynth.map(\freq, ~bus);
+
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////// EXPLORING AND TUTORIALS SECTION ////////////////////////////////////

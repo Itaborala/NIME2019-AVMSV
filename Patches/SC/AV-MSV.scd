@@ -58,24 +58,43 @@ SynthDef(\diskin6, {
 }).add
 )
 (
-x = Synth.new(\diskin6);
+x = Synth.basicNew(\diskin6);
 m = { arg buf; x.addToHeadMsg(nil, [\bufnum, buf.bufnum])};
 )
 (
 var len;
 len = ~paths.size;
+
+x = Synth.basicNew(\diskin6);
+m = { arg buf; x.addToHeadMsg(nil, [\bufnum, buf.bufnum])};
+
 k = Buffer.cueSoundFile(s, ~folder +/+ ~paths.wchoose(1/len !len ), 0, 1, completionMessage: m);
 )
 
 x.addToHeadMsg(nil, [\orientatio, {MouseX.kr(-2.0, 2.0)}])
 
-x.set(\orientatio, -2.0)
+x.set(\orientatio, -0.99)
 //orientation channels: -3.0, 2.0, -0.99, 0.0, 1.0, 2.01
 
+s.queryAllNodes
 x.free
+x.trace
 s.scope
 k.close
 map
+//----------------Control Synthdefs
+
+
+(
+SynthDef(\modulator, {
+	Out.kr(\out.kr(0), SinOsc.kr(\freq.kr(1)).range(-3,3));
+}).add;
+)
+
+~bus = Bus.control(s,1);
+~modulatorSynth = Synth(\modulator, [out: ~bus]);
+x.map(\orientatio, ~bus)
+~modulatorSynth.set(\freq, 0.1)
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
