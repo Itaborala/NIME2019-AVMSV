@@ -48,30 +48,35 @@ paths.close;
 ///////////////////////////////////// SYNTHDEF SECTION //////////////////////////////////////////
 
 
-//--------- 6 Channels DiskIn reader
+
+//---------- Inserting static control
 
 (
 SynthDef(\diskin6, {
-	Out.ar(\out.kr(0), PanAz.ar(6, DiskIn.ar(1, \bufnum.kr(0)), 0.0));
+
+	Out.ar(\out.kr(0), PanAz.ar(6, DiskIn.ar(1, \bufnum.kr(0)), -1, orientation: \orientatio.kr(0.0) ));
 }).add
 )
-
-
-
-
-basicNew
 (
 x = Synth.new(\diskin6);
 m = { arg buf; x.addToHeadMsg(nil, [\bufnum, buf.bufnum])};
 )
-k
 (
 var len;
 len = ~paths.size;
-k = Buffer.cueSoundFile(s, "../Sons/ESTRUTURAS/VOZ_LUANA/" +/+ ~paths.wchoose(1/len !len ), 0, 1, completionMessage: m);
+k = Buffer.cueSoundFile(s, ~folder +/+ ~paths.wchoose(1/len !len ), 0, 1, completionMessage: m);
 )
+
+x.addToHeadMsg(nil, [\orientatio, {MouseX.kr(-2.0, 2.0)}])
+
+x.set(\orientatio, -2.0)
+//orientation channels: -3.0, 2.0, -0.99, 0.0, 1.0, 2.01
+
+x.free
 s.scope
 k.close
+map
+
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////// EXPLORING AND TUTORIALS SECTION ////////////////////////////////////
