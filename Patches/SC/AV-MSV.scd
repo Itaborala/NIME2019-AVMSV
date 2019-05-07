@@ -23,8 +23,9 @@ s.makeGui;
 //s.record;
 //s.stopRecording;
 /////////////////////////////////////////////////////////////////////////////////////////////////
-///////////////////////////// FUNCTIONS EXPERIMENTS SECTION /////////////////////////////////////
 
+~folder = "../Sons/ESTRUTURAS/VOZ_LUANA/";
+//~folder = "../Sons/Vasos_Camila/;
 
 (var paths, soundPath;
 
@@ -42,209 +43,38 @@ paths.close;
 
 ~paths;
 )
-~paths.size
-~paths.wchoose(1/12!12)
-~paths.wchoose([0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0])
 
-1/12!12
-
-(var len;
-
-len = ~paths.size;
-k = Buffer.cueSoundFile(s, "../Sons/ESTRUTURAS/VOZ_LUANA/" +/+ ~paths.wchoose(1/len !len ), 0, 1);
-
-
-)
-
-(var len;
-
-len = ~paths.size;
-k = Buffer.read(s, "../Sons/ESTRUTURAS/VOZ_LUANA/" ++ ~paths.wchoose(1/len !len ));
-k.close
-)
-
-
-
-k.plot
-k.bufnum
-k.close
-y = { PlayBuf.ar(1, k.bufnum) }.play
-x = { DiskIn.ar(1, k.bufnum) }.play;
-
-{SinOsc.ar}.play
-
-x.free
-y.free
 /////////////////////////////////////////////////////////////////////////////////////////////////
-////////////////////////////// SYNTHDEF EXPERIMENTS SECTION /////////////////////////////////////
+///////////////////////////////////// SYNTHDEF SECTION //////////////////////////////////////////
 
-OpenObject.start
+
+//--------- 6 Channels DiskIn reader
 
 (
-SynthDef(\diskin6, {|out, bufnum=0|
-	Out.ar(out, DiskIn.ar(1, bufnum))
+SynthDef(\diskin6, {
+	Out.ar(\out.kr(0), PanAz.ar(6, DiskIn.ar(1, \bufnum.kr(0)), 0.0));
 }).add
 )
 
-y = Synth.new(\diskin6)
-
-n = { arg buf; y.addToHeadMsg(nil,  [\bufnum, buf.bufnum])};
-(var len;
-
-len = ~paths.size;
 
 
-k = Buffer.cueSoundFile(s, "../Sons/ESTRUTURAS/VOZ_LUANA/" +/+ ~paths.wchoose(1/len !len ), 0, 1, completionMessage: n);
 
-
+basicNew
+(
+x = Synth.new(\diskin6);
+m = { arg buf; x.addToHeadMsg(nil, [\bufnum, buf.bufnum])};
 )
+k
+(
+var len;
+len = ~paths.size;
+k = Buffer.cueSoundFile(s, "../Sons/ESTRUTURAS/VOZ_LUANA/" +/+ ~paths.wchoose(1/len !len ), 0, 1, completionMessage: m);
+)
+s.scope
 k.close
-
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////// EXPLORING AND TUTORIALS SECTION ////////////////////////////////////
-~buz = Bus.audio(s, 6)
-~buz.free
-
-/////////////////////OpenObject Example
-
-Quarks.install("OpenObject");
-Quarks.install("sc3plugins");
-Quarks.gui
-
-//puredata buffer example
-
-s.boot
-
-OpenObject.start
-
-b= Buffer.read(s, "NIME2019-AVMSV/Sons/Vasos_Camila/ataques_vasos_01.wav")
-b= Buffer.read(s, "NIME2019-AVMSV/Sons/ESTRUTURAS/VOZ_LUANA/SussurroMouseXY_01.wav")
-(
-SynthDef(\vasoread, { |bufnum, amp= 0, freq= 10, rate= 1, offset= 0, dur= 0.3, pan= 0|
-	Out.ar(0, TGrains.ar(2, Impulse.ar(freq), bufnum, rate, offset*BufDur.ir(b), dur, pan, amp));
-}).add;
-)
-
-x= Synth(\vasoread)
-x.publish(\vasoX)
-
-x.unpublish(\vasoX)
-
-b.release;
-b.free;
-
-//////////////////////Terminal Unix Commands
-"ls -l ../Sons/ESTRUTURAS/VOZ_LUANA".unixCmd
-
-"ls -l ../Sons/Vozes_Luana_BRC_Estudios".unixCmd
-"cd NIME2019-AVMSV/".unixCmd
-"pwd".unixCmd
-(
-//var p, l,
-
-d = "";
-
-p = Pipe.new("ls -l", "r");
-
-l = p.getLine;
-
-while({l.notNil}, {d = d ++ l ++ "\n"; l = p.getLine; });
-
-p.close;
-
-)
-Post << d << nl;
-
-d[0..20]
-
-///////////////////////Understanding rrand
-
-a = { |x| sin(x)};
-(0..1000).normalize(0, 5pi).collect(a).plot;
-
-
-a = { |x| sin(x)} rrand: { |x| sin(x) * -1 };
-(0..1000).normalize(0, 5pi).collect(a).plot;
-
-
-(
-{a = SinOsc.ar(335); b = SinOsc.ar(MouseX.kr(1, 1000, 1));
-rrand(a, b) * 0.1 }.plot;
-)
-c.play;
-
-rrand(0, 0.1)!5
-
-
-(
-("rand").postln;
-~rAND= {1.0.rand}!10;
-~rAND.value.postln;
-
-
-("rrand").postln;
-~rRAND= {rrand(0, 1.0)}!10;
-~rRAND.value.postln;
-
-0
-)
-rrand(0, 1.0)
-
-
-//////////////////////////////// Randomness in SC examples
-
-(
-
-var randomNumbers, histogram, minValue = 5.0, maxValue = 500, numVals = 10000, numBins = 500;
-
-
-randomNumbers = Array.fill(numVals, { exprand(minValue, maxValue); });
-
-histogram = Signal.newClear(numBins);
-
-
-randomNumbers.do({ arg each; var count, histoIndex;
-
-	histoIndex = ( each - minValue ).round(1).asInteger;
-
-	count = histogram.at(histoIndex);
-
-	histogram.put(histoIndex, count + 1);
-
-});
-
-
-histogram.plot("histogram for exprand: " ++ minValue ++ " to " ++ maxValue);
-
-)
-
-(
-
-var randomNumbers, histogram, minValue = 5.0, maxValue = 500, numVals = 100000, numBins = 500;
-
-
-randomNumbers = Array.fill(numVals, { rrand(minValue, maxValue); });
-
-histogram = Signal.newClear(numBins);
-
-
-randomNumbers.do({ arg each; var count, histoIndex;
-
-	histoIndex = ( each - minValue ).round(1).asInteger;
-
-	count = histogram.at(histoIndex);
-
-	histogram.put(histoIndex, count + 1);
-
-});
-
-
-histogram.plot("histogram for rrrand: " ++ minValue ++ " to " ++ maxValue);
-
-)
-
-
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////// END /////////////////////////////////////////////
