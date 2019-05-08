@@ -380,7 +380,102 @@ histogram.plot("histogram for rrrand: " ++ minValue ++ " to " ++ maxValue);
 
 )
 
+////////////////////////////////// NodeProxy Example
 
+a = NodeProxy.new.play; // play to hardware output.
+a.fadeTime = 2; // fadeTime specifies crossfade
+// set the source
+a.source = { SinOsc.ar([350, 351.3], 0, 0.2)};
+a.source = { Pulse.ar([350, 351.3] / 4, 0.4) * 0.2 };
+a.source = Pbind(\dur, 0.03, \freq, Pbrown(0, 1, 0.1, inf).linexp(0, 1, 200, 350));
+
+b = NodeProxy.new;
+a.source = { Ringz.ar(b.ar, [350, 351.3] * 8, 0.2) * 4 };
+b.source = { Impulse.ar([5, 7]/2, [0, 0.5]) };
+
+a.clear(3); // clear after 3 seconds
+b.clear(3);
+
+
+////////////////////////////////// Ndef Example
+
+// define a few chain links
+Ndef(\comb, { CombL.ar(\in.ar(0 ! 2), 0.1, LFNoise1.kr(0.1).range(0, 0.1), 2) });
+Ndef(\ring, { Ringz.ar(\in1.ar(0 ! 2), LFNoise1.kr(0.1).range(550, 700), 0.2).distort });
+Ndef(\filt, { RLPF.ar(\in.ar(0 ! 2), LFNoise1.kr(0.1).range(300, 7000), 0.1) });
+Ndef(\dust, { Dust.ar(5 ! 2) });
+Ndef(\y, { \in1.ar(0 ! 2) });
+// play back one of them
+Ndef(\y).play;
+
+Ndef(\dust).unmap
+// different combinations
+Ndef(\y) <<> nil
+Ndef(\ring) <<> nil
+
+Ndef(\my) <<> Ndef(\mring)
+
+Ndef(\ring) <<>.in1 Ndef(\dust);
+
+Ndef(\mring) <<> Ndef(\mcomb);
+
+Ndef(\y) <<>.in1 Ndef(\dust);
+Ndef(\y) <<>.in1 Ndef(\ring);
+Ndef(\y) <<>.in1 Ndef(\ring) <<> Ndef(\dust);
+Ndef(\y) <<> Ndef(\ring) <<> Ndef(\comb) <<> Ndef(\dust);
+Ndef(\y) <<> Ndef(\ring) <<> Ndef(\comb) <<> Ndef(\filt) <<> Ndef(\dust);
+Ndef(\dust) <>> Ndef(\filt) <>> Ndef(\ring) <>> Ndef(\comb) <>> Ndef(\y);
+
+Ndef(\y) <<> Ndef(\b) <<> Ndef(\x);
+Ndef(\y).play;
+
+Ndef(\b, { Ringz.ar(\in.ar(0 ! 2), LFNoise1.kr(0.1).range(550, 700), 0.2).distort });
+
+Ndef(\x, { Dust.ar(5 ! 2) });
+//---------------------Other example
+
+s.boot;
+
+Ndef(\sound).play;
+Ndef(\sound).fadeTime = 1;
+Ndef(\sound, { SinOsc.ar([600, 635], 0, SinOsc.kr(2).max(0) * 0.2) });
+Ndef(\sound, { SinOsc.ar([600, 635] * 3, 0, SinOsc.kr(2 * 3).max(0) * 0.2) });
+Ndef(\sound, { SinOsc.ar([600, 635] * 2, 0, SinOsc.kr(2 * 3).max(0) * 0.2) });
+Ndef(\sound, Pbind(\dur, 0.17, \freq, Pfunc({ rrand(300, 700) })) );
+
+Ndef(\lfo, { LFNoise1.kr(3, 400, 800) });
+Ndef(\sound).map(\freq, Ndef(\lfo));
+Ndef(\sound, { arg freq; SinOsc.ar([600, 635] + freq, 0, SinOsc.kr(2 * 3).max(0) * 0.2) });
+Ndef(\lfo, { LFNoise1.kr(300, 400, 800) });
+
+Ndef.clear; //clear all Ndefs
+
+//-----HIGH VOLUME!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+(
+Ndef(\sound, {
+    RHPF.ar(
+        \in1.ar([0, 0]) * \in2.ar([0, 0]),
+        \freq.kr(6000, 2),
+        \rq.kr(0.2)
+    ) * 7
+}).play;
+Ndef(\sound).fadeTime = 0.2;    // avoid harsh clicks
+)
+
+
+
+
+Ndef(\a, { SinOsc.ar(MouseX.kr(300, 1000, 1) * [1, 1.2], \phase.ar([0, 0]) * 0.2) });
+Ndef(\b, { LFDNoise3.ar(MouseY.kr(3, 1000, 1) * [1, 1.2]) });
+Ndef(\c, { LFTri.ar(MouseY.kr(3, 10, 1) * [1, 1.2]).max(0) });
+Ndef(\a).fadeTime = 0.2;    // avoid harsh clicks again
+
+Ndef(\sound) <<>.in1 Ndef(\a);
+Ndef(\sound) <<>.in2 Ndef(\b);
+Ndef(\sound) <<>.in2 Ndef(\c);
+Ndef(\a) <<>.phase Ndef(\sound);
+Ndef(\a) <<>.phase nil;    // unmap
+Ndef.clear(3);        // fade out and clear all Ndefs
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////// END /////////////////////////////////////////////
