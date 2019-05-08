@@ -24,8 +24,15 @@ s.makeGui;
 //s.stopRecording;
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
+
+//------------------------- Choosing SoundBank folder
+
 ~folder = "../Sons/ESTRUTURAS/VOZ_LUANA/";
 //~folder = "../Sons/Vasos_Camila/";
+
+
+
+//------------------------- Building an Array with the sound paths
 
 (var paths, soundPath;
 
@@ -37,7 +44,12 @@ paths = Pipe.new("ls " + ~folder, "r");
 
 soundPath = paths.getLine;
 
-while({soundPath.notNil}, {~paths = ~paths.add(soundPath); soundPath = paths.getLine;});
+while({soundPath.notNil}, {
+
+		~paths = ~paths.add(soundPath);
+		soundPath = paths.getLine;
+
+});
 
 paths.close;
 
@@ -45,59 +57,109 @@ paths.close;
 )
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////// SYNTHDEF SECTION //////////////////////////////////////////
 
-//---------- Changing to PlayBuf
+
+//-------------------------- Buffer SynthDefs
 
 (
+
 SynthDef(\playbuf6, {
 
-	Out.ar(\out.kr(0), PanAz.ar(6, PlayBuf.ar(1, \bufnum.kr(0)), -1, orientation: \orientatio.kr(0.0) ));
-}).add
+	Out.ar(\out.kr(0), PanAz.ar(6, PlayBuf.ar(1, \bufnum.kr(0)), pos: \position.kr(-1), orientation: \orientatio.kr(-3.0) ));
+}).add;
+
 )
+
+//-------------------------- Control Synthdefs
+
 (
+
+SynthDef(\modulator, {
+	Out.kr(\out.kr(0), SinOsc.kr(\freq.kr(1)).range(-3,3));
+}).add;
+
+SynthDef(\control_mouseXs1, {
+	Out.kr(\out.kr(0), MouseX.kr(-1, 1));
+}).add;
+
+)
+
+//-------------------------- Start a Synth function
+
+(
+
 var len;
 len = ~paths.size;
 
 m = { arg buf; buf.close; x = Synth.new(\playbuf6, [\bufnum, buf.bufnum])};
 
 k = Buffer.read(s, ~folder +/+ ~paths.wchoose(1/len !len ), action: m);
-//k.close
+
 )
 
+//--------------------------- Controls
 
+//--- sets and static controls
 
-s.queryAllNodes
-x.free
-x.trace
-s.scope
-k.close
-x.run
-x.set([\trigg, 0.0])
-x
-k
-k.free
-map
+x.set([\orientatio, 2.01])
 
-//---------- Inserting UGen control
-
-//----------------Control Synthdefs
+//--- UGen control with buses
 
 
 (
-SynthDef(\modulator, {
-	Out.kr(\out.kr(0), SinOsc.kr(\freq.kr(1)).range(-3,3));
-}).add;
+
+~busModulator = Bus.control(s,1);
+~modulatorSynth = Synth(\modulator, [\out, ~busModulator]);
+
 )
 
-~bus = Bus.control(s,1);
-~modulatorSynth = Synth(\modulator, [out: ~bus]);
-x.map(\orientatio, ~bus)
+
+(
+
+~busMouseX = Bus.control(s, 2);
+~mouseXSynth = Synth(\control_mouseXs1, [\out, ~busMouseX]);
+
+)
+
+
+
+//--------------------------- Objects analysis
+
+
+s.scope
+s.queryAllNodes;
+
+x;
+x.trace;
+
+k;
+
+
+//--------------------------- Close
+
+(
+
+x.free;
+k.free;
+
+)
+
+(
+
+~busModulator.free
+~busMouseX.free
+
+)
+
+
+
+
+x.map(\position, ~busMouseX)
 ~modulatorSynth.set(\freq, 0.1)
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
-//////////////////////////// EXPLORING AND TUTORIALS SECTION ////////////////////////////////////
+
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////// END /////////////////////////////////////////////
