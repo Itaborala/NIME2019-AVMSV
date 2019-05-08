@@ -84,6 +84,10 @@ SynthDef(\control_mouseXs1, {
 
 )
 
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
+
 //-------------------------- Start a Synth function
 
 (
@@ -121,7 +125,17 @@ x.set([\orientatio, 2.01])
 
 )
 
+//--------------------------- Close
 
+(
+x.free;
+k.free;
+)
+
+(
+~busModulator.free
+~busMouseX.free
+)
 
 //--------------------------- Objects analysis
 
@@ -135,21 +149,7 @@ x.trace;
 k;
 
 
-//--------------------------- Close
 
-(
-
-x.free;
-k.free;
-
-)
-
-(
-
-~busModulator.free
-~busMouseX.free
-
-)
 
 
 
