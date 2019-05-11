@@ -1,4 +1,5 @@
 (
+Server.supernova;
 Server.default = s = Server.local;
 s.options.sampleRate_(48000);
 s.options.numOutputBusChannels = 6;
@@ -12,7 +13,8 @@ s.options.numInputBusChannels = 2;
 )
 (
 s.boot;
-OpenObject.start
+OpenObject.start;
+s.scope;
 )
 
 s.recSampleFormat_("int24");
@@ -28,6 +30,7 @@ s.makeGui;
 //------------------------- Choosing SoundBank folder
 
 ~folder = "../Sons/ESTRUTURAS/VOZ_LUANA/";
+~folder = "../Sons/MADRIGAL_materiais";
 //~folder = "../Sons/Vasos_Camila/";
 
 
@@ -56,17 +59,26 @@ paths.close;
 ~paths;
 )
 
+v={PanAz.ar(6, PlayBuf.ar(1, \bufnum.kr(0), trigger: Impulse.kr(\trigg.kr(0.05))), pos: \position.kr(-1), orientation: \orientatio.kr(-3.0) );}
+
+z={arg buf; PanAz.ar(6, PlayBuf.ar(1, buf.bufnum, trigger: Impulse.kr(\trigg.kr(0.05))), pos: \position.kr(-1), orientation: \orientatio.kr(-3.0) );}
+
+
+w={|bufnum=0, trigg=0.05, position= -1, orientatio= -3.0| PanAz.ar(6, PlayBuf.ar(1, bufnum, trigger: Impulse.kr(trigg)), pos: position, orientation: orientatio );}
+
+
+
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-//-------------------------- Buffer SynthDefs
+//-------------------------- Buffer NDefs
 
 (
 
-SynthDef(\playbuf6, {
+r=Ndef(\playbuf6, {
 
-	Out.ar(\out.kr(0), PanAz.ar(6, PlayBuf.ar(1, \bufnum.kr(0)), pos: \position.kr(-1), orientation: \orientatio.kr(-3.0) ));
-}).add;
+	PanAz.ar(6, PlayBuf.ar(1, \bufnum.kr(0), trigger: \trigg.ar(1)), pos: \position.kr(-1), orientation: \orientatio.kr(-3.0) );
+});
 
 )
 
@@ -88,7 +100,7 @@ SynthDef(\control_mouseXs1, {
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 //NDEF VERSION
-
+r.play
 
 //-------------------------- Start a Synth function
 
@@ -97,21 +109,83 @@ SynthDef(\control_mouseXs1, {
 var len;
 len = ~paths.size;
 
-m = { arg buf; buf.close; x = Synth.new(\playbuf6, [\bufnum, buf.bufnum])};
+m = {
+	arg buf;
+	buf.close;
+
+
+	r=Ndef(\playbuf6, {
+
+	PanAz.ar(6, PlayBuf.ar(1, buf.bufnum, trigger: \trigg.ar(1)), pos: \position.kr(-1), orientation: \orientatio.kr(-3.0) );
+	});
+
+
+};
 
 k = Buffer.read(s, ~folder +/+ ~paths.wchoose(1/len !len ), action: m);
 
 )
 
+
+
+
+
+
+Ndef(\playbuf6).fadeTime = 3;
+r.set(\bufnum, 1);
+
+Ndef(\playbuf6).controlKeys
+Ndef(\playbuf6).set(\position, -1)
+k
+Ndef(\playbuf6).set(\bufnum, 2)
 //--------------------------- Controls
 
 //--- sets and static controls
 
 x.set([\orientatio, 2.01])
-
+w.set([\bufnum, 1])
 //--- UGen control with buses
 
+n = NodeProxy.new;
+n.play;
+n.fadeTime = 1;
+r = Ndef(\playbuf6)
+n.source = v;
+n.source = Ndef(\playbuf6, v)
+n.source = {Impulse.ar(1)}
+v.set([\bufnum, 2])
 
+Ndef(\playbuf6).set(\trigg, 0)
+NdefPreset.new(Ndef(\playbuf6), [\bufnum, \position])
+NdefPreset(Ndef(\playbuf6)).settingsString
+NdefPreset(Ndef(\playbuf6)).checkSpecsMissing
+NdefPreset(Ndef(\playbuf6)).namesToStore
+NdefPreset(Ndef(\playbuf6)).getCurr
+NdefPreset.all
+NdefPreset.all.clear
+NdefPreset(Ndef(\playbuf6)).getSetNames
+NdefPreset(Ndef(\playbuf6)).settings.printcsAll;"";
+NdefPreset(Ndef(\playbuf6)).addSet(\cucu, [[\bufnum, 0], [\position, -1]])
+NdefPreset(Ndef(\playbuf6)).addSet(\coco, [[\bufnum, 1], [\position, -1]])
+NdefPreset(Ndef(\playbuf6)).xfadeTo(\coco, 3)
+NdefPreset(Ndef(\playbuf6)).setCurr(\coco)
+NdefPreset(Ndef(\playbuf6)).setCurr(\cocu)
+NdefPreset(Ndef(\playbuf6)).setCurr(\cucu)
+NdefPreset(Ndef(\playbuf6)).morph(0.5, \coco, \cucu, false)
+Ndef(\playbuf6).addSpec(\position, [-1, 1, \lin])
+Ndef(\playbuf6).addSpec(\bufnum, [0, 1, \lin])
+Ndef(\playbuf6).fadeTime = 1
+Ndef(\playbuf6).set(\bufnum, 1.1)
+
+
+
+~pb = Ndef(\playbuf6)
+~pbpr = NdefPreset
+
+
+
+r = Ndef(\playbuf6, w)
+r.play
 (
 
 ~busModulator = Bus.control(s,1);
