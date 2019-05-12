@@ -236,6 +236,51 @@ k.close
 x
 map
 
+//-------------------Last Synthdef control implementation
+
+
+(
+
+SynthDef(\modulator, {
+	Out.kr(\out.kr(0), SinOsc.kr(\freq.kr(1)).range(-3,3));
+}).add;
+
+SynthDef(\control_mouseXs1, {
+	Out.kr(\out.kr(0), MouseX.kr(-1, 1000));
+}).add;
+
+)
+
+
+(
+
+~busModulator = Bus.control(s,1);
+~modulatorSynth = Synth(\modulator, [\out, ~busModulator]);
+
+)
+
+
+(
+
+~busMouseX = Bus.control(s, 2);
+~mouseXSynth = Synth(\control_mouseXs1, [\out, ~busMouseX]);
+
+)
+
+//--------------------------- Close
+
+(
+x.free;
+k.free;
+)
+
+(
+~busModulator.free
+~busMouseX.free
+)
+
+
+
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////// EXPLORING AND TUTORIALS SECTION ////////////////////////////////////
@@ -517,7 +562,7 @@ Ndef(\sound, {
 Ndef(\sound).fadeTime = 0.2;    // avoid harsh clicks
 )
 
-Ndef(\a, { SinOsc.ar(MouseX.kr(300, 1000, 1) * [1, 1.2], \phase.ar([0, 0]) * 0.2) });
+Ndef(\a, { SinOsc.ar(\test.kr(500) * [1, 1.2], \phase.ar([0, 0]) * 0.2) });
 Ndef(\b, { LFDNoise3.ar(MouseY.kr(3, 1000, 1) * [1, 1.2]) });
 Ndef(\c, { LFTri.ar(MouseY.kr(3, 10, 1) * [1, 1.2]).max(0) });
 Ndef(\a).fadeTime = 0.2;    // avoid harsh clicks again
@@ -525,7 +570,11 @@ Ndef(\a).fadeTime = 0.2;    // avoid harsh clicks again
 Ndef(\sound) <<>.in1 Ndef(\a);
 Ndef(\sound) <<>.in2 Ndef(\b);
 Ndef(\sound) <<>.in2 Ndef(\c);
-Ndef(\a) <<>.phase Ndef(\sound);
+Ndef(\a) <<>.phase Ndef(\c);
+Ndef(\a) <<>.test ~busMouseX;
+Ndef(\a).map(\test, ~busMouseX);
+
+Ndef(\a) <<>.test nil;
 Ndef(\a) <<>.phase nil;    // unmap
 Ndef.clear(3);
 /////////////////////////////////////////////////////////////////////////////////////////////////

@@ -59,12 +59,12 @@ paths.close;
 ~paths;
 )
 
-v={PanAz.ar(6, PlayBuf.ar(1, \bufnum.kr(0), trigger: Impulse.kr(\trigg.kr(0.05))), pos: \position.kr(-1), orientation: \orientatio.kr(-3.0) );}
+//v={PanAz.ar(6, PlayBuf.ar(1, \bufnum.kr(0), trigger: Impulse.kr(\trigg.kr(0.05))), pos: \position.kr(-1), orientation: \orientatio.kr(-3.0) );}
 
-z={arg buf; PanAz.ar(6, PlayBuf.ar(1, buf.bufnum, trigger: Impulse.kr(\trigg.kr(0.05))), pos: \position.kr(-1), orientation: \orientatio.kr(-3.0) );}
+//z={arg buf; PanAz.ar(6, PlayBuf.ar(1, buf.bufnum, trigger: Impulse.kr(\trigg.kr(0.05))), pos: \position.kr(-1), orientation: \orientatio.kr(-3.0) );}
 
 
-w={|bufnum=0, trigg=0.05, position= -1, orientatio= -3.0| PanAz.ar(6, PlayBuf.ar(1, bufnum, trigger: Impulse.kr(trigg)), pos: position, orientation: orientatio );}
+//w={|bufnum=0, trigg=0.05, position= -1, orientatio= -3.0| PanAz.ar(6, PlayBuf.ar(1, bufnum, trigger: Impulse.kr(trigg)), pos: position, orientation: orientatio );}
 
 
 
@@ -73,25 +73,25 @@ w={|bufnum=0, trigg=0.05, position= -1, orientatio= -3.0| PanAz.ar(6, PlayBuf.ar
 
 //-------------------------- Buffer NDefs
 
+//(
+
+//r=Ndef(\playbuf6, {
+
+	//PanAz.ar(6, PlayBuf.ar(1, \bufnum.kr(0), trigger: \trigg.ar(1)), pos: \position.kr(-1), orientation: \orientatio.kr(-3.0) );
+//});
+
+//)
+
+//-------------------------- Control Ndefs
+
 (
 
-r=Ndef(\playbuf6, {
-
-	PanAz.ar(6, PlayBuf.ar(1, \bufnum.kr(0), trigger: \trigg.ar(1)), pos: \position.kr(-1), orientation: \orientatio.kr(-3.0) );
-});
-
-)
-
-//-------------------------- Control Synthdefs
-
-(
-
-SynthDef(\modulator, {
-	Out.kr(\out.kr(0), SinOsc.kr(\freq.kr(1)).range(-3,3));
+Ndef(\modulator, {
+	SinOsc.kr(\freq.kr(1)).range(-3,3);
 }).add;
 
-SynthDef(\control_mouseXs1, {
-	Out.kr(\out.kr(0), MouseX.kr(-1, 1));
+Ndef(\control_mouseXs1, {
+	MouseX.kr(-1, 1);
 }).add;
 
 )
@@ -100,12 +100,28 @@ SynthDef(\control_mouseXs1, {
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 //NDEF VERSION
-r.play
+
+
+
+
+~pbuf6 = Ndef(\playbuf6);
+~pbuf6.fadeTime = 2;
+~pbuf6.addSpec(\position, [-1, 1, \lin]);
+~pbuf6.addSpec(\bufnum, [0, 1, \lin]);
+NdefPreset.new(Ndef(\playbuf6), [\bufnum, \position]);
+~pbuf6Preset = NdefPreset(Ndef(\playbuf6));
+~pbuf6Preset.addSet(\cucu, [[\bufnum, 0], [\position, -1]]);
+~pbuf6Preset.addSet(\coco, [[\bufnum, 0], [\position, -0.5]]);
+
+
+~pbuf6Preset.settings.printcsAll;"";
+NdefPreset.all
+NdefPreset.all.clear
 
 //-------------------------- Start a Synth function
 
 (
-
+{
 var len;
 len = ~paths.size;
 
@@ -123,7 +139,7 @@ m = {
 };
 
 k = Buffer.read(s, ~folder +/+ ~paths.wchoose(1/len !len ), action: m);
-
+}
 )
 
 
@@ -179,39 +195,14 @@ Ndef(\playbuf6).set(\bufnum, 1.1)
 
 
 
-~pb = Ndef(\playbuf6)
+
 ~pbpr = NdefPreset
 
 
 
-r = Ndef(\playbuf6, w)
+r = Ndef(\playbuf6)
 r.play
-(
 
-~busModulator = Bus.control(s,1);
-~modulatorSynth = Synth(\modulator, [\out, ~busModulator]);
-
-)
-
-
-(
-
-~busMouseX = Bus.control(s, 2);
-~mouseXSynth = Synth(\control_mouseXs1, [\out, ~busMouseX]);
-
-)
-
-//--------------------------- Close
-
-(
-x.free;
-k.free;
-)
-
-(
-~busModulator.free
-~busMouseX.free
-)
 
 //--------------------------- Objects analysis
 
