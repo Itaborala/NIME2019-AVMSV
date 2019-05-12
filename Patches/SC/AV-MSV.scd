@@ -86,11 +86,11 @@ paths.close;
 
 (
 
-Ndef(\modulator, {
+~modulatorNdef = Ndef(\modulator, {
 	SinOsc.kr(\freq.kr(1)).range(-3,3);
 }).add;
 
-Ndef(\control_mouseXs1, {
+~mouseXNdef = Ndef(\control_mouseXs1, {
 	MouseX.kr(-1, 1);
 }).add;
 
@@ -114,11 +114,20 @@ NdefPreset.new(Ndef(\playbuf6), [\bufnum, \position]);
 ~pbuf6Preset.addSet(\coco, [[\bufnum, 0], [\position, -0.5]]);
 
 
+//--- printing options
+
 ~pbuf6Preset.settings.printcsAll;"";
+~pbuf6Preset.getSetNames;
+~pbuf6Preset.getCurr;
+~pbuf6Preset.settingsString;
+~pbuf6Preset.checkSpecsMissing;
+~pbuf6Preset.namesToStore;
+
+
 NdefPreset.all
 NdefPreset.all.clear
 
-//-------------------------- Start a Synth function
+//-------------------------- Start/Reset a NodeProxy source and read a new buffer
 
 (
 {
@@ -130,7 +139,7 @@ m = {
 	buf.close;
 
 
-	r=Ndef(\playbuf6, {
+	~pbuf6 = Ndef(\playbuf6, {
 
 	PanAz.ar(6, PlayBuf.ar(1, buf.bufnum, trigger: \trigg.ar(1)), pos: \position.kr(-1), orientation: \orientatio.kr(-3.0) );
 	});
@@ -138,29 +147,44 @@ m = {
 
 };
 
-k = Buffer.read(s, ~folder +/+ ~paths.wchoose(1/len !len ), action: m);
+~kbuf = Buffer.read(s, ~folder +/+ ~paths.wchoose(1/len !len ), action: m);
 }
 )
 
+//--------------------------- Controlling parameters
+
+~pbuf6.controlKeys;
 
 
-
-
-
-Ndef(\playbuf6).fadeTime = 3;
-r.set(\bufnum, 1);
-
-Ndef(\playbuf6).controlKeys
-Ndef(\playbuf6).set(\position, -1)
-k
-Ndef(\playbuf6).set(\bufnum, 2)
-//--------------------------- Controls
 
 //--- sets and static controls
 
-x.set([\orientatio, 2.01])
-w.set([\bufnum, 1])
-//--- UGen control with buses
+~pbuf6.set(\bufnum, 1);
+~pbuf6.set(\position, -1)
+~pbuf6.set(\bufnum, 2)
+
+//---- With NdefPreset
+
+~pbuf6Preset.xfadeTo(\coco, 3);
+~pbuf6Preset.xfadeTo(\cucu, 3);
+
+~pbuf6Preset.setCurr(\coco);
+~pbuf6Preset.setCurr(\cucu);
+
+~pbuf6Preset.morph(0.5, \coco, \cucu);
+
+//--- UGen control with Ndef mapping <<> operator
+
+~pbuf6 <<>.position nil;
+~pbuf6 <<>.position ~modutalorNdef;
+
+
+~pbuf6 <<>.position nil;
+~pbuf6 <<>.position ~mouseXNdef;
+
+
+
+
 
 n = NodeProxy.new;
 n.play;
@@ -171,32 +195,14 @@ n.source = Ndef(\playbuf6, v)
 n.source = {Impulse.ar(1)}
 v.set([\bufnum, 2])
 
-Ndef(\playbuf6).set(\trigg, 0)
-NdefPreset.new(Ndef(\playbuf6), [\bufnum, \position])
-NdefPreset(Ndef(\playbuf6)).settingsString
-NdefPreset(Ndef(\playbuf6)).checkSpecsMissing
-NdefPreset(Ndef(\playbuf6)).namesToStore
-NdefPreset(Ndef(\playbuf6)).getCurr
-NdefPreset.all
-NdefPreset.all.clear
-NdefPreset(Ndef(\playbuf6)).getSetNames
-NdefPreset(Ndef(\playbuf6)).settings.printcsAll;"";
-NdefPreset(Ndef(\playbuf6)).addSet(\cucu, [[\bufnum, 0], [\position, -1]])
-NdefPreset(Ndef(\playbuf6)).addSet(\coco, [[\bufnum, 1], [\position, -1]])
-NdefPreset(Ndef(\playbuf6)).xfadeTo(\coco, 3)
-NdefPreset(Ndef(\playbuf6)).setCurr(\coco)
-NdefPreset(Ndef(\playbuf6)).setCurr(\cocu)
-NdefPreset(Ndef(\playbuf6)).setCurr(\cucu)
-NdefPreset(Ndef(\playbuf6)).morph(0.5, \coco, \cucu, false)
-Ndef(\playbuf6).addSpec(\position, [-1, 1, \lin])
-Ndef(\playbuf6).addSpec(\bufnum, [0, 1, \lin])
-Ndef(\playbuf6).fadeTime = 1
+
 Ndef(\playbuf6).set(\bufnum, 1.1)
 
 
 
 
-~pbpr = NdefPreset
+x.set([\orientatio, 2.01])
+w.set([\bufnum, 1])
 
 
 
@@ -221,8 +227,7 @@ Ndef(\sound).play;
 
 
 
-x.map(\position, ~busMouseX)
-~modulatorSynth.set(\freq, 0.1)
+
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
