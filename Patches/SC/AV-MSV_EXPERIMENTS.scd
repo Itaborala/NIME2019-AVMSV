@@ -236,6 +236,51 @@ k.close
 x
 map
 
+//-------------------Last Synthdef control implementation
+
+
+(
+
+SynthDef(\modulator, {
+	Out.kr(\out.kr(0), SinOsc.kr(\freq.kr(1)).range(-3,3));
+}).add;
+
+SynthDef(\control_mouseXs1, {
+	Out.kr(\out.kr(0), MouseX.kr(-1, 1000));
+}).add;
+
+)
+
+
+(
+
+~busModulator = Bus.control(s,1);
+~modulatorSynth = Synth(\modulator, [\out, ~busModulator]);
+
+)
+
+
+(
+
+~busMouseX = Bus.control(s, 2);
+~mouseXSynth = Synth(\control_mouseXs1, [\out, ~busMouseX]);
+
+)
+
+//--------------------------- Close
+
+(
+x.free;
+k.free;
+)
+
+(
+~busModulator.free
+~busMouseX.free
+)
+
+
+
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////// EXPLORING AND TUTORIALS SECTION ////////////////////////////////////
@@ -246,6 +291,7 @@ map
 
 Quarks.install("OpenObject");
 Quarks.install("sc3plugins");
+Quarks.install("JITLibExtensions");
 Quarks.gui
 
 //puredata buffer example
@@ -379,6 +425,17 @@ randomNumbers.do({ arg each; var count, histoIndex;
 histogram.plot("histogram for rrrand: " ++ minValue ++ " to " ++ maxValue);
 
 )
+Ndef(\sound).source
+Ndef(\sound, { SinOsc.ar([600, 635], Ndef.ar(\sound), LFNoise1.kr(2).max(0) * 0.2) });
+Ndef(\sound).play;
+Ndef.clear;
+
+Ndef(\sound).play;
+Ndef(\sound).fadeTime = 5;
+Ndef(\sound, { SinOsc.ar([600, 635], 0, SinOsc.kr(2).max(0) * 0.2) });
+Ndef(\sound, { SinOsc.ar([600, 635] * 3, 0, SinOsc.kr(2 * 3).max(0) * 0.2) });
+Ndef(\sound, { SinOsc.ar([600, 635] * 2, 0, SinOsc.kr(2 * 3).max(0) * 0.2) });
+Ndef(\sound, Pbind(\dur, 0.17, \freq, Pfunc({ rrand(300, 700) })) );
 
 ////////////////////////////////// NodeProxy Example
 
@@ -477,5 +534,143 @@ Ndef(\a) <<>.phase Ndef(\sound);
 Ndef(\a) <<>.phase nil;    // unmap
 Ndef.clear(3);        // fade out and clear all Ndefs
 
+// same example as in link::Classes/ProxyPreset:: but using Ndef for Tdef:
+(
+    // make an empty Tdef
+a = Tdef(\a);
+    // give it some param settings
+a.set(\dt, 0.1, \freq, 440, \bend, 4, \bendVar, 4, \sustain, 0.05);
+
+// add specs for the params to the Tdef - see Halo class.
+a.addSpec(\dt, [0.03, 3, \exp]);
+a.addSpec(\bend, [-24, 24, \lin]);
+a.addSpec(\bendVar, [-24, 24, \lin]);
+a.addSpec(\sustain, [0.003, 3, \exp]);
+
+// define what the Tdef does
+Tdef(\a, { |env|
+    loop({
+        (
+            instrument: \pingbend,
+            freq:  env[\freq],
+            bend: env[\bend] + env[\bendVar].rand2,
+            sustain: env[\sustain],
+            pan: 1.0.rand2
+        ).play;
+
+        env[\dt].wait;
+    })
+});
+
+Tdef(\a).gui;
+
+    // will be using this SynthDef:
+s.boot;
+SynthDef(\pingbend,
+    { arg out=0, freq=440, bend = 4, sustain=0.05;
+        var env = EnvGen.ar(Env.perc(0.001, sustain, 0.3), doneAction:2);
+        freq = freq * XLine.kr(1, bend.midiratio, sustain);
+        Out.ar(out, SinOsc.ar(freq, 0, env))
+    }).add;
+
+)
+
+// brain transplant
+Ndef(\a, { arg freq=440, bend = 4, sustain=0.05, dt = 0.1;
+    var trig = Impulse.ar(1/dt);
+    var env = EnvGen.ar(Env.perc(0.001, sustain, 0.3), trig);
+    freq = freq * EnvGen.ar(Env([1, bend.midiratio], [sustain], \exp), trig);
+    Pan2.ar(SinOsc.ar(freq, 0, env), TRand.ar(-1.0, 1.0, trig));
+});
+
+Tdef(\a).envir.keysValuesDo { |k, v| Ndef(\a).set(k, v) };
+Ndef(\a).addHalo(\spec, Tdef(\a).getSpec);
+Ndef(\a).getSpec === Tdef(\a).getSpec;
+
+Ndef(\a).play;
+
+Ndef(\a).gui;
+    // then make a ProxyPreset for for the Tdef:
+    // for Tdefs, best use TdefPreset.
+b = NdefPreset(Ndef(\a));
+
+// these are the param names for which settings are stored
+// they can be reordered, see ParamGui help file.
+b.namesToStore;
+// in emergencies:
+NdefPreset.all.clear;
+Ndef(\a).addHalo(\namesToStore, Ndef(\a).controlKeys);
+NdefPreset(Ndef(\a));
+
+    // add the current state of the envir as a setting
+b.addSet(\ada);
+
+    // make and add 3 random settings
+(
+b.setRand(0.25); b.addSet(\bobo);
+b.setRand(0.25); b.addSet(\coco);
+b.someRand(0.25, 0.5); b.addSet(\dad);
+)
+    //
+b.getSetNames;
+b.settings.printcsAll;"";
+
+b.setCurr(b.getSetNames.choose.postln);
+b.setTarg(b.getSetNames.choose.postln);
+
+
+// a gui for the NdefPreset
+g = NdefPresetGui(b, 8).moveTo(10, 200);
+
+b.morph(1.0.rand, \ada, \coco);
+
+b.xfadeTo(\coco, 3, { "xfade doneFunc done.".postln; });
+b.xfadeTo(b.getSetNames.choose.postln, exprand(0.3, 10));
+
+// do recursive crossfading
+(
+f = {
+    "next xfade: ".post;
+    b.xfadeTo(b.getSetNames.choose.postln, exprand(0.3, 10), f)
+};
+
+f.value;
+)
+f = nil; // stop
+
+// set relative to a preset:
+b.getSetNorm(\coco);
+b.proxy.setUni(*(b.getSetNorm(\curr) + [0.1.rand2]).flat);
+
+b.setRelFrom(\coco, { 0.3.rand2 }.dup(b.namesToStore.size))
+
+
+
+(
+Ndef(\sound, {
+    RHPF.ar(
+        \in1.ar([0, 0]) * \in2.ar([0, 0]),
+        \freq.kr(6000, 2),
+        \rq.kr(0.2)
+    ) * 7
+}).play;
+Ndef(\sound).fadeTime = 0.2;    // avoid harsh clicks
+)
+
+Ndef(\a, { SinOsc.ar(\test.kr(500) * [1, 1.2], \phase.ar([0, 0]) * 0.2) });
+Ndef(\b, { LFDNoise3.ar(MouseY.kr(3, 1000, 1) * [1, 1.2]) });
+Ndef(\c, { LFTri.ar(MouseY.kr(3, 10, 1) * [1, 1.2]).max(0) });
+Ndef(\a).fadeTime = 0.2;    // avoid harsh clicks again
+
+Ndef(\sound) <<>.in1 Ndef(\a);
+Ndef(\sound) <<>.in2 Ndef(\b);
+Ndef(\sound) <<>.in2 Ndef(\c);
+Ndef(\a) <<>.phase Ndef(\c);
+Ndef(\a) <<>.test ~busMouseX;
+Ndef(\a).map(\test, ~busMouseX);
+
+Ndef(\a) <<>.test nil;
+Ndef(\a) <<>.phase nil;    // unmap
+Ndef.clear(3);
 /////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////// END /////////////////////////////////////////////

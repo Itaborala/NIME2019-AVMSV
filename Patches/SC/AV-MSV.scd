@@ -1,4 +1,5 @@
 (
+Server.supernova;
 Server.default = s = Server.local;
 s.options.sampleRate_(48000);
 s.options.numOutputBusChannels = 6;
@@ -12,7 +13,8 @@ s.options.numInputBusChannels = 2;
 )
 (
 s.boot;
-OpenObject.start
+OpenObject.start;
+s.scope;
 )
 
 s.recSampleFormat_("int24");
@@ -28,6 +30,7 @@ s.makeGui;
 //------------------------- Choosing SoundBank folder
 
 ~folder = "../Sons/ESTRUTURAS/VOZ_LUANA/";
+~folder = "../Sons/MADRIGAL_materiais";
 //~folder = "../Sons/Vasos_Camila/";
 
 
@@ -56,88 +59,156 @@ paths.close;
 ~paths;
 )
 
-/////////////////////////////////////////////////////////////////////////////////////////////////
+//v={PanAz.ar(6, PlayBuf.ar(1, \bufnum.kr(0), trigger: Impulse.kr(\trigg.kr(0.05))), pos: \position.kr(-1), orientation: \orientatio.kr(-3.0) );}
+
+//z={arg buf; PanAz.ar(6, PlayBuf.ar(1, buf.bufnum, trigger: Impulse.kr(\trigg.kr(0.05))), pos: \position.kr(-1), orientation: \orientatio.kr(-3.0) );}
 
 
-//-------------------------- Buffer SynthDefs
+//w={|bufnum=0, trigg=0.05, position= -1, orientatio= -3.0| PanAz.ar(6, PlayBuf.ar(1, bufnum, trigger: Impulse.kr(trigg)), pos: position, orientation: orientatio );}
 
-(
-
-SynthDef(\playbuf6, {
-
-	Out.ar(\out.kr(0), PanAz.ar(6, PlayBuf.ar(1, \bufnum.kr(0)), pos: \position.kr(-1), orientation: \orientatio.kr(-3.0) ));
-}).add;
-
-)
-
-//-------------------------- Control Synthdefs
-
-(
-
-SynthDef(\modulator, {
-	Out.kr(\out.kr(0), SinOsc.kr(\freq.kr(1)).range(-3,3));
-}).add;
-
-SynthDef(\control_mouseXs1, {
-	Out.kr(\out.kr(0), MouseX.kr(-1, 1));
-}).add;
-
-)
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-//SYNTHDEF VERSION..
 
+//-------------------------- Buffer NDefs
 
-//-------------------------- Start a Synth function
+//(
+
+//r=Ndef(\playbuf6, {
+
+	//PanAz.ar(6, PlayBuf.ar(1, \bufnum.kr(0), trigger: \trigg.ar(1)), pos: \position.kr(-1), orientation: \orientatio.kr(-3.0) );
+//});
+
+//)
+
+//-------------------------- Control Ndefs
 
 (
 
+~modulatorNdef = Ndef(\modulator, {
+	SinOsc.kr(\freq.kr(1)).range(-3,3);
+}).add;
+
+~mouseXNdef = Ndef(\control_mouseXs1, {
+	MouseX.kr(-1, 1);
+}).add;
+
+)
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
+//NDEF VERSION
+
+
+
+
+~pbuf6 = Ndef(\playbuf6);
+~pbuf6.fadeTime = 2;
+~pbuf6.addSpec(\position, [-1, 1, \lin]);
+~pbuf6.addSpec(\bufnum, [0, 1, \lin]);
+NdefPreset.new(Ndef(\playbuf6), [\bufnum, \position]);
+~pbuf6Preset = NdefPreset(Ndef(\playbuf6));
+~pbuf6Preset.addSet(\cucu, [[\bufnum, 0], [\position, -1]]);
+~pbuf6Preset.addSet(\coco, [[\bufnum, 0], [\position, -0.5]]);
+
+
+//--- printing options
+
+~pbuf6Preset.settings.printcsAll;"";
+~pbuf6Preset.getSetNames;
+~pbuf6Preset.getCurr;
+~pbuf6Preset.settingsString;
+~pbuf6Preset.checkSpecsMissing;
+~pbuf6Preset.namesToStore;
+
+
+NdefPreset.all
+NdefPreset.all.clear
+
+//-------------------------- Start/Reset a NodeProxy source and read a new buffer
+
+(
+{
 var len;
 len = ~paths.size;
 
-m = { arg buf; buf.close; x = Synth.new(\playbuf6, [\bufnum, buf.bufnum])};
+m = {
+	arg buf;
+	buf.close;
 
-k = Buffer.read(s, ~folder +/+ ~paths.wchoose(1/len !len ), action: m);
 
+	~pbuf6 = Ndef(\playbuf6, {
+
+	PanAz.ar(6, PlayBuf.ar(1, buf.bufnum, trigger: \trigg.ar(1)), pos: \position.kr(-1), orientation: \orientatio.kr(-3.0) );
+	});
+
+
+};
+
+~kbuf = Buffer.read(s, ~folder +/+ ~paths.wchoose(1/len !len ), action: m);
+}
 )
 
-//--------------------------- Controls
+//--------------------------- Controlling parameters
+
+~pbuf6.controlKeys;
+
+
 
 //--- sets and static controls
 
+~pbuf6.set(\bufnum, 1);
+~pbuf6.set(\position, -1)
+~pbuf6.set(\bufnum, 2)
+
+//---- With NdefPreset
+
+~pbuf6Preset.xfadeTo(\coco, 3);
+~pbuf6Preset.xfadeTo(\cucu, 3);
+
+~pbuf6Preset.setCurr(\coco);
+~pbuf6Preset.setCurr(\cucu);
+
+~pbuf6Preset.morph(0.5, \coco, \cucu);
+
+//--- UGen control with Ndef mapping <<> operator
+
+~pbuf6 <<>.position nil;
+~pbuf6 <<>.position ~modutalorNdef;
+
+
+~pbuf6 <<>.position nil;
+~pbuf6 <<>.position ~mouseXNdef;
+
+
+
+
+
+n = NodeProxy.new;
+n.play;
+n.fadeTime = 1;
+r = Ndef(\playbuf6)
+n.source = v;
+n.source = Ndef(\playbuf6, v)
+n.source = {Impulse.ar(1)}
+v.set([\bufnum, 2])
+
+
+Ndef(\playbuf6).set(\bufnum, 1.1)
+
+
+
+
 x.set([\orientatio, 2.01])
-
-//--- UGen control with buses
-
-
-(
-
-~busModulator = Bus.control(s,1);
-~modulatorSynth = Synth(\modulator, [\out, ~busModulator]);
-
-)
+w.set([\bufnum, 1])
 
 
-(
 
-~busMouseX = Bus.control(s, 2);
-~mouseXSynth = Synth(\control_mouseXs1, [\out, ~busMouseX]);
+r = Ndef(\playbuf6)
+r.play
 
-)
-
-//--------------------------- Close
-
-(
-x.free;
-k.free;
-)
-
-(
-~busModulator.free
-~busMouseX.free
-)
 
 //--------------------------- Objects analysis
 
@@ -156,8 +227,7 @@ Ndef(\sound).play;
 
 
 
-x.map(\position, ~busMouseX)
-~modulatorSynth.set(\freq, 0.1)
+
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
