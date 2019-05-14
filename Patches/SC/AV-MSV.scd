@@ -90,8 +90,8 @@ paths.close;
 	SinOsc.kr(\freq.kr(1)).range(-3,3);
 }).add;
 
-~mouseXNdef = Ndef(\control_mouseXs1, {
-	MouseX.kr(-1, 1);
+~mouseXNdef = Ndef(\control_mouseXs1, { |lim=1|
+	MouseX.kr(-1*lim, lim);
 }).add;
 
 )
@@ -112,7 +112,7 @@ NdefPreset.new(Ndef(\playbuf6), [\bufnum, \position]);
 ~pbuf6Preset = NdefPreset(Ndef(\playbuf6));
 ~pbuf6Preset.addSet(\cucu, [[\bufnum, 0], [\position, -1]]);
 ~pbuf6Preset.addSet(\coco, [[\bufnum, 0], [\position, -0.5]]);
-
+~pbuf6.play
 
 //--- printing options
 
@@ -128,9 +128,19 @@ NdefPreset.all
 NdefPreset.all.clear
 
 //-------------------------- Start/Reset a NodeProxy source and read a new buffer
-
 (
-{
+
+~pbuf6 = Ndef(\playbuf6, {
+
+	PanAz.ar(6, PlayBuf.ar(1, bufnum: \bufnum.kr(7), trigger: \trigg.ar(1)), pos: \position.kr(-1), orientation: \orientatio.kr(-3.0) );
+});
+
+)
+NdefMixer
+Mix
+MixedBundle
+(
+
 var len;
 len = ~paths.size;
 
@@ -141,15 +151,31 @@ m = {
 
 	~pbuf6 = Ndef(\playbuf6, {
 
-	PanAz.ar(6, PlayBuf.ar(1, buf.bufnum, trigger: \trigg.ar(1)), pos: \position.kr(-1), orientation: \orientatio.kr(-3.0) );
+		Array.fill(1, PanAz.ar(3, PlayBuf.ar(2, buf.bufnum, trigger: \trigg.ar(1)), pos: \position.kr(-1), orientation: \orientatio.kr(-3.0) )).reshape(6);
 	});
 
+	//Ndef.ar(\playbuf6, 6);
 
 };
 
+
+
+
 ~kbuf = Buffer.read(s, ~folder +/+ ~paths.wchoose(1/len !len ), action: m);
-}
+
 )
+
+Ndef.ar(\playbuf6, 6)
+~pbuf6.reshaping = \elastic;
+a = [4,7,6,8];
+a.reshape(2,2);
+a.reshape(2,3);
+Array.fill(4, { arg i; i * 2 });
+Bag.fill(14, { arg i; i.rand });
+
+Array.fill2D(1, 4, 0)
+Array.fill(1, Array.fill2D(2, 3, 0)).reshape(6);
+
 
 //--------------------------- Controlling parameters
 
@@ -175,6 +201,9 @@ m = {
 
 //--- UGen control with Ndef mapping <<> operator
 
+
+// <<> operator resets the opperator
+
 ~pbuf6 <<>.position nil;
 ~pbuf6 <<>.position ~modutalorNdef;
 
@@ -182,8 +211,15 @@ m = {
 ~pbuf6 <<>.position nil;
 ~pbuf6 <<>.position ~mouseXNdef;
 
+~pbuf6 <<>.orientatio nil;
+~pbuf6 <<>.orientatio ~mouseXNdef;
 
+// map does not reset the operator
 
+~pbuf6.map(\orientatio, ~mouseXNdef);
+~pbuf6.map(\orientatio, nil);
+
+~mouseXNdef.set(\lim, 3)
 
 
 n = NodeProxy.new;
