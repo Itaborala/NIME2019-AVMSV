@@ -167,14 +167,7 @@ m = {
 
 Ndef.ar(\playbuf6, 6)
 ~pbuf6.reshaping = \elastic;
-a = [4,7,6,8];
-a.reshape(2,2);
-a.reshape(2,3);
-Array.fill(4, { arg i; i * 2 });
-Bag.fill(14, { arg i; i.rand });
 
-Array.fill2D(1, 4, 0)
-Array.fill(1, Array.fill2D(2, 3, 0)).reshape(6);
 
 
 //--------------------------- Controlling parameters
