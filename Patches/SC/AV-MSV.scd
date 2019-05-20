@@ -56,6 +56,9 @@ while({soundPath.notNil}, {
 
 paths.close;
 
+
+
+
 ~paths;
 )
 
@@ -105,7 +108,7 @@ paths.close;
 
 (
 ~pbuf6 = Ndef(\playbuf6);
-~pbuf6.fadeTime = 2;
+~pbuf6.fadeTime = 1;
 ~pbuf6.addSpec(\position, [-1, 1, \lin]);
 ~pbuf6.addSpec(\bufnum, [0, 1, \lin]);
 NdefPreset.new(Ndef(\playbuf6), [\bufnum, \position]);
@@ -130,6 +133,9 @@ NdefPreset.all
 NdefPreset.all.clear
 
 //-------------------------- Start/Reset a NodeProxy source and read a new buffer
+
+[\fj, \tre, \hdt][0]
+
 (
 
 ~pbuf6 = Ndef(\playbuf6, {
@@ -145,14 +151,14 @@ MixedBundle
 m = {
 	arg buf;
 	buf.close;
-
+	buf.postln;
 
 	~pbuf6 = Ndef(\playbuf6, {
 
 		Array.fill(1, PanAz.ar(6, PlayBuf.ar(1, buf.bufnum, trigger: \trigg.ar(1)), pos: \position.kr(-1), orientation: \orientatio.kr(-3.0) )).reshape(6);
 	});
 
-	//Ndef.ar(\playbuf6, 6);
+
 
 };
 )
@@ -161,18 +167,54 @@ m = {
 var len;
 len = ~paths.size;
 
+~kbufLoad = {~kbuf = Buffer.read(s, ~folder +/+ ~paths.wchoose(1/len !len ), numFrames: 800000, action: m, bufnum: 45);};
+~kbufLoad2 = {~kbuf2 = Buffer.read(s, ~folder +/+ ~paths.wchoose(1/len !len ), numFrames: 800000, action: m, bufnum: 46);};
 
-
-
-
-~kbuf = Buffer.read(s, ~folder +/+ ~paths.wchoose(1/len !len ), action: m);
 
 )
 
+
+(
+
+j = {var len;
+len = ~paths.size;
+~kbufLoad.play;
+//~kbuf = Buffer.read(s, ~folder +/+ ~paths.wchoose(1/len !len ), numFrames: 800000, action: m, bufnum: 45);
+
+0.1.wait;
+(~kbuf.duration/2).wait;
+
+//~kbuf.free.postln;
+
+//~kbuf2 = Buffer.read(s, ~folder +/+ ~paths.wchoose(1/len !len ), numFrames: 800000, action: m, bufnum: 46);
+
+~kbufLoad2.play;
+
+0.1.wait;
+
+"Done"
+
+}.fork
+
+)
+
+j.play;
+j.reset;
+
+Routine
+Buffer
+~kbuf.free
 Ndef.ar(\playbuf6, 6)
 ~pbuf6.reshaping = \elastic;
+~kbuf.numFrames
+~kbuf.duration.postln
 
+~kbuf
+~test
+~kbuf = {Buffer.read(s, ~folder +/+ ~paths.wchoose(1/2 !2 ), numFrames: 800000, action: m, bufnum: 45);};
 
+~test = {~kbuf = Buffer.read(s, ~folder +/+ ~paths.wchoose(1/2 !2 ), numFrames: 800000, action: m, bufnum: 45);}
+~test.fork
 
 //--------------------------- Controlling parameters
 
