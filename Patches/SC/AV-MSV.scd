@@ -90,7 +90,7 @@ paths.close;
 (
 
 ~modulatorNdef = Ndef(\modulator, {
-	SinOsc.kr(\freq.kr(1)).range(-3,3);
+	SinOsc.kr(\freq.kr(1)).range(-2,2);
 }).add;
 
 ~mouseXNdef = Ndef(\control_mouseXs1, { |lim=1|
@@ -108,7 +108,7 @@ paths.close;
 
 (
 ~pbuf6 = Ndef(\playbuf6);
-~pbuf6.fadeTime = 1;
+~pbuf6.fadeTime = 3;
 ~pbuf6.addSpec(\position, [-1, 1, \lin]);
 ~pbuf6.addSpec(\bufnum, [0, 1, \lin]);
 NdefPreset.new(Ndef(\playbuf6), [\bufnum, \position]);
@@ -167,23 +167,28 @@ m = {
 var len;
 len = ~paths.size;
 
-~kbufLoad = {~kbuf = Buffer.read(s, ~folder +/+ ~paths.wchoose(1/len !len ), numFrames: 800000, action: m, bufnum: 45);};
-~kbufLoad2 = {~kbuf2 = Buffer.read(s, ~folder +/+ ~paths.wchoose(1/len !len ), numFrames: 800000, action: m, bufnum: 46);};
+~kbufLoad = {~kbuf = Buffer.read(s, ~folder +/+ ~paths.wchoose(1/len !len ), startFrame: rand(10000000).postln, numFrames: 800000, action: m, bufnum: 45);};
+~kbufLoad2 = {~kbuf2 = Buffer.read(s, ~folder +/+ ~paths.wchoose(1/len !len ), startFrame: rand(10000000).postln, numFrames: 800000, action: m, bufnum: 46);};
 
 
 )
-
+[1,2].choose
 
 (
-
+j.stop;
 j = {var len;
 	len = ~paths.size;
-	2.do{
+	inf.do{
+
+		~modulatorNdef.set(\freq, [ linrand(-0.5) + 0.5, rand(1000) + 200].choose.postln);
+
 
 	~kbufLoad.fork;
 	0.1.wait;
 	(~kbuf.duration/2).wait;
 
+
+		~modulatorNdef.set(\freq, [ linrand(-0.5) + 0.5, rand(1000) + 200].choose.postln);
 
 
 	~kbufLoad2.fork;
@@ -196,7 +201,7 @@ j = {var len;
 
 j.play;
 j.reset;
-
+j.stop
 Routine
 Buffer
 ~kbuf.free
@@ -215,7 +220,7 @@ Ndef.ar(\playbuf6, 6)
 //--------------------------- Controlling parameters
 
 ~pbuf6.controlKeys;
-
+rand(10.0)
 ~as = \asd
 
 Ndef(~as)
@@ -263,10 +268,11 @@ Ndef(~as)
 ~pbuf6.map(\orientatio, nil);
 
 ~pbuf6.map(\position, ~mouseXNdef);
-~pbuf6.map(\position, ~mouseXNdef);
+~pbuf6.map(\position, ~modulatorNdef);
+~pbuf6.map(\position, nil);
 
 ~mouseXNdef.set(\lim, 3)
-
+~modulatorNdef.set(\freq, 1.2)
 
 n = NodeProxy.new;
 n.play;
