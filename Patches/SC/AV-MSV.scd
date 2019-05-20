@@ -177,23 +177,19 @@ len = ~paths.size;
 (
 
 j = {var len;
-len = ~paths.size;
-~kbufLoad.play;
-//~kbuf = Buffer.read(s, ~folder +/+ ~paths.wchoose(1/len !len ), numFrames: 800000, action: m, bufnum: 45);
+	len = ~paths.size;
+	2.do{
 
-0.1.wait;
-(~kbuf.duration/2).wait;
+	~kbufLoad.fork;
+	0.1.wait;
+	(~kbuf.duration/2).wait;
 
-//~kbuf.free.postln;
 
-//~kbuf2 = Buffer.read(s, ~folder +/+ ~paths.wchoose(1/len !len ), numFrames: 800000, action: m, bufnum: 46);
 
-~kbufLoad2.play;
-
-0.1.wait;
-
-"Done"
-
+	~kbufLoad2.fork;
+	0.1.wait;
+	(~kbuf.duration/1.3).wait;
+	}
 }.fork
 
 )
