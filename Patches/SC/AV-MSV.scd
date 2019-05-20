@@ -103,7 +103,7 @@ paths.close;
 
 
 
-
+(
 ~pbuf6 = Ndef(\playbuf6);
 ~pbuf6.fadeTime = 2;
 ~pbuf6.addSpec(\position, [-1, 1, \lin]);
@@ -112,6 +112,8 @@ NdefPreset.new(Ndef(\playbuf6), [\bufnum, \position]);
 ~pbuf6Preset = NdefPreset(Ndef(\playbuf6));
 ~pbuf6Preset.addSet(\cucu, [[\bufnum, 0], [\position, -1]]);
 ~pbuf6Preset.addSet(\coco, [[\bufnum, 0], [\position, -0.5]]);
+)
+
 ~pbuf6.play
 
 //--- printing options
@@ -132,7 +134,7 @@ NdefPreset.all.clear
 
 ~pbuf6 = Ndef(\playbuf6, {
 
-	PanAz.ar(6, PlayBuf.ar(1, bufnum: \bufnum.kr(7), trigger: \trigg.ar(1)), pos: \position.kr(-1), orientation: \orientatio.kr(-3.0) );
+	PanAz.ar(6, PlayBuf.ar(1, bufnum: \bufnum.kr(11), trigger: \trigg.ar(1)), pos: \position.kr(-1), orientation: \orientatio.kr(-3.0) );
 });
 
 )
@@ -140,10 +142,6 @@ NdefMixer
 Mix
 MixedBundle
 (
-
-var len;
-len = ~paths.size;
-
 m = {
 	arg buf;
 	buf.close;
@@ -151,12 +149,18 @@ m = {
 
 	~pbuf6 = Ndef(\playbuf6, {
 
-		Array.fill(1, PanAz.ar(3, PlayBuf.ar(2, buf.bufnum, trigger: \trigg.ar(1)), pos: \position.kr(-1), orientation: \orientatio.kr(-3.0) )).reshape(6);
+		Array.fill(1, PanAz.ar(6, PlayBuf.ar(1, buf.bufnum, trigger: \trigg.ar(1)), pos: \position.kr(-1), orientation: \orientatio.kr(-3.0) )).reshape(6);
 	});
 
 	//Ndef.ar(\playbuf6, 6);
 
 };
+)
+(
+
+var len;
+len = ~paths.size;
+
 
 
 
@@ -174,13 +178,18 @@ Ndef.ar(\playbuf6, 6)
 
 ~pbuf6.controlKeys;
 
+~as = \asd
 
+Ndef(~as)
+~kbuf.bufnum
 
 //--- sets and static controls
 
 ~pbuf6.set(\bufnum, 1);
 ~pbuf6.set(\position, -1)
-~pbuf6.set(\bufnum, 2)
+~pbuf6.set(\bufnum, 10)
+
+~pbuf6.set(\orientatio, -3)
 
 //---- With NdefPreset
 
@@ -207,10 +216,16 @@ Ndef.ar(\playbuf6, 6)
 ~pbuf6 <<>.orientatio nil;
 ~pbuf6 <<>.orientatio ~mouseXNdef;
 
+~pbuf6 <<>.bufnum ~kbuf.bufnum;
+~pbuf6 <<>.bufnum nil
+~pbuf6 <<>.bufnum ~kbuf.bufnum -2;
 // map does not reset the operator
 
 ~pbuf6.map(\orientatio, ~mouseXNdef);
 ~pbuf6.map(\orientatio, nil);
+
+~pbuf6.map(\position, ~mouseXNdef);
+~pbuf6.map(\position, ~mouseXNdef);
 
 ~mouseXNdef.set(\lim, 3)
 
@@ -254,8 +269,20 @@ k;
 Ndef(\sound).play;
 
 
-
-
+(
+var a, b, c, t;
+a = Pbind(\x, Pseq([1, 2, 3, 4]), \dur, 1);
+b = Pbind(\x, Pseq([10, 20, 30, 40]), \dur, 0.4);
+c = Ppar([a, b]);
+t = c.asStream;
+20.do({ t.next(Event.default).postln; });
+)
+(
+var a, b;
+a = Pbind(\note, Pseq([7, 4, 0], 4), \dur, Pseq([1, 0.5, 1.5], inf));
+b = Pbind(\note, Pseq([5, 10, 12], 4), \dur, 1);
+Ppar([ a, b ]).play;
+)
 
 
 
