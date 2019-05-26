@@ -201,7 +201,7 @@ j = {var len;
 
 j.play;
 j.reset;
-j.stop
+j.stop;
 Routine
 Buffer
 ~kbuf.free
