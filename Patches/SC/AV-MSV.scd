@@ -16,6 +16,18 @@ s.boot;
 OpenObject.start;
 s.scope;
 )
+Quarks.gui
+
+Cepstrum
+
+// If you installed the sc3-plugins to a user location:
+
+(
+~sc3plugs = Quarks("https://sc3-plugins.svn.sourceforge.net/svnroot/sc3-plugins/build", Platform.userAppSupportDir+/+ "SC3plugins");
+)
+
+~sc3plugs.gui;
+Quarks.addFolder(Platform.userAppSupportDir +/+ "SC3plugins")
 
 s.recSampleFormat_("int24");
 s.quit;
@@ -27,12 +39,13 @@ s.makeGui;
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 
+
 //------------------------- Choosing SoundBank folder
 
 ~folder = "../Sons/ESTRUTURAS/VOZ_LUANA/";
 ~folder = "../Sons/MADRIGAL_materiais";
 //~folder = "../Sons/Vasos_Camila/";
-
+~folder = "../Sons";
 
 
 //------------------------- Building an Array with the sound paths
@@ -62,28 +75,64 @@ paths.close;
 ~paths;
 )
 
-//v={PanAz.ar(6, PlayBuf.ar(1, \bufnum.kr(0), trigger: Impulse.kr(\trigg.kr(0.05))), pos: \position.kr(-1), orientation: \orientatio.kr(-3.0) );}
 
-//z={arg buf; PanAz.ar(6, PlayBuf.ar(1, buf.bufnum, trigger: Impulse.kr(\trigg.kr(0.05))), pos: \position.kr(-1), orientation: \orientatio.kr(-3.0) );}
+(
+~pathsDict = Dictionary.new;
+PathName(~folder).entries.do{
+	arg subfolder;
+	~pathsDict.add(
+		subfolder.folderName.asSymbol ->
+		Array.fill(
+			subfolder.entries.size,
+			{
+				arg i;
+				subfolder.entries[i].fullPath;
+			}
+		)
+	);
+};
 
+~len = {|key| ~pathsDict[key].size};
 
-//w={|bufnum=0, trigg=0.05, position= -1, orientatio= -3.0| PanAz.ar(6, PlayBuf.ar(1, bufnum, trigger: Impulse.kr(trigg)), pos: position, orientation: orientatio );}
-
+~pathsDict
+)
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
+//NDEF VERSION
+//-------------------------- Buffer NDefs and Presets
 
-//-------------------------- Buffer NDefs
+(
+Ndef.new(\playbuf6).ar(6);
+~pbuf6 = Ndef(\playbuf6);
+~pbuf6.fadeTime = 3;
+~pbuf6.addSpec(\position, [-1, 1, \lin]);
+~pbuf6.addSpec(\bufnum, [0, 1, \lin]);
+NdefPreset.new(Ndef(\playbuf6), [\bufnum, \position]);
+~pbuf6Preset = NdefPreset(Ndef(\playbuf6));
+~pbuf6Preset.addSet(\cucu, [[\bufnum, 0], [\position, -1]]);
+~pbuf6Preset.addSet(\coco, [[\bufnum, 0], [\position, -0.5]]);
+)
 
-//(
+~pbuf6.play
 
-//r=Ndef(\playbuf6, {
 
-	//PanAz.ar(6, PlayBuf.ar(1, \bufnum.kr(0), trigger: \trigg.ar(1)), pos: \position.kr(-1), orientation: \orientatio.kr(-3.0) );
-//});
+//--- printing options
 
-//)
+~pbuf6Preset.settings.printcsAll;"";
+~pbuf6Preset.getSetNames;
+~pbuf6Preset.getCurr;
+~pbuf6Preset.settingsString;
+~pbuf6Preset.checkSpecsMissing;
+~pbuf6Preset.namesToStore;
+
+Ndef.all
+Ndef.all.clear
+
+NdefPreset.all
+NdefPreset.all.clear
+
 
 //-------------------------- Control Ndefs
 
@@ -102,35 +151,7 @@ paths.close;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-//NDEF VERSION
 
-
-
-(
-~pbuf6 = Ndef(\playbuf6);
-~pbuf6.fadeTime = 3;
-~pbuf6.addSpec(\position, [-1, 1, \lin]);
-~pbuf6.addSpec(\bufnum, [0, 1, \lin]);
-NdefPreset.new(Ndef(\playbuf6), [\bufnum, \position]);
-~pbuf6Preset = NdefPreset(Ndef(\playbuf6));
-~pbuf6Preset.addSet(\cucu, [[\bufnum, 0], [\position, -1]]);
-~pbuf6Preset.addSet(\coco, [[\bufnum, 0], [\position, -0.5]]);
-)
-
-~pbuf6.play
-
-//--- printing options
-
-~pbuf6Preset.settings.printcsAll;"";
-~pbuf6Preset.getSetNames;
-~pbuf6Preset.getCurr;
-~pbuf6Preset.settingsString;
-~pbuf6Preset.checkSpecsMissing;
-~pbuf6Preset.namesToStore;
-
-
-NdefPreset.all
-NdefPreset.all.clear
 
 //-------------------------- Start/Reset a NodeProxy source and read a new buffer
 
@@ -140,27 +161,120 @@ NdefPreset.all.clear
 
 ~pbuf6 = Ndef(\playbuf6, {
 
-	PanAz.ar(6, PlayBuf.ar(1, bufnum: \bufnum.kr(11), trigger: \trigg.ar(1)), pos: \position.kr(-1), orientation: \orientatio.kr(-3.0) );
+	PanAz.ar(6, PlayBuf.ar(1, bufnum: \bufnum.kr(45)), pos: \position.kr(-1), orientation: \orientatio.kr(-3.0) );
 });
 
 )
+
+~pbuf6.set(\bufnum, 45)
+
+~kbuf
+(
+~pbuf6 = Ndef(\playbuf6,
+	{
+		var sig;
+
+		sig = PlayBuf.ar(1, 45);
+
+		sig = PanAz.ar(6, sig, pos: 1.7);
+		Array.fill(1, sig).reshape(6)
+	}
+);
+)
+
+
 NdefMixer
 Mix
 MixedBundle
+(
+
+~pbuf6 = Ndef(\playbuf6,
+
+		{
+		var sig;
+		sig = PlayBuf.ar(1, 45);
+
+		sig = PanAz.ar(6,
+			in: sig,
+			pos: \pos.kr(-1),
+			level: \amp.kr(1.0),
+			orientation: \orientation.kr(-3.0)
+		);
+
+		//Reshaping
+
+		Array.fill(1, sig).reshape(6);
+		}
+
+	);
+
+)
+
 (
 m = {
 	arg buf;
 	buf.close;
 	buf.postln;
 
-	~pbuf6 = Ndef(\playbuf6, {
+	~pbuf6 = Ndef(\playbuf6,
 
-		Array.fill(1, PanAz.ar(6, PlayBuf.ar(1, buf.bufnum, trigger: \trigg.ar(1)), pos: \position.kr(-1), orientation: \orientatio.kr(-3.0) )).reshape(6);
-	});
+		{
+		var sig;
 
+		sig = PlayBuf.ar(1, buf.bufnum);
 
+		sig = PanAz.ar(6,
+			in: sig,
+			pos: \pos.kr(-1),
+			level: \amp.kr(1.0),
+			orientation: \orientation.kr(-3.0)
+		);
 
+		//Reshaping
+
+		Array.fill(1, sig).reshape(6);
+		}
+	);
 };
+)
+
+
+
+
+
+
+
+~len.value(\Ceramicas_Amanda)
+
+
+
+(
+
+var folderKey, len;
+
+folderKey = \Ceramicas_Amanda;
+len = ~len.value(folderKey);
+
+
+~pathsDict[folderKey].wchoose(1/len !len)
+
+)
+PathName
+
+
+
+
+(
+
+var folderKey, len;
+
+folderKey = \Ceramicas_Amanda;
+len = ~len.value(folderKey);
+
+~kbufLoad = {~kbuf = Buffer.read(s, ~pathsDict[folderKey].wchoose(1/len !len ), startFrame: rand(100000).postln, numFrames: 800000, action: m, bufnum: 45);};
+~kbufLoad2 = {~kbuf2 = Buffer.read(s, ~pathsDict[folderKey].wchoose(1/len !len ), startFrame: rand(100000).postln, numFrames: 800000, action: m, bufnum: 46);};
+
+
 )
 (
 
@@ -172,7 +286,12 @@ len = ~paths.size;
 
 
 )
+
+
 [1,2].choose
+~kbuf
+~kbuf.numChannels
+~kbufLoad.fork
 
 (
 j.stop;
@@ -212,7 +331,8 @@ Ndef.ar(\playbuf6, 6)
 
 ~kbuf
 ~test
-~kbuf = {Buffer.read(s, ~folder +/+ ~paths.wchoose(1/2 !2 ), numFrames: 800000, action: m, bufnum: 45);};
+
+~kbuf = Buffer.read(s, ~folder +/+ ~paths.choose(0,1), numFrames: 800000, bufnum: 45);
 
 ~test = {~kbuf = Buffer.read(s, ~folder +/+ ~paths.wchoose(1/2 !2 ), numFrames: 800000, action: m, bufnum: 45);}
 ~test.fork
@@ -328,7 +448,7 @@ b = Pbind(\note, Pseq([5, 10, 12], 4), \dur, 1);
 Ppar([ a, b ]).play;
 )
 
-
+Cepstrum
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 

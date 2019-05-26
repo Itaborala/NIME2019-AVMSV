@@ -23,11 +23,248 @@ s.makeGui;
 //s.record;
 //s.stopRecording;
 /////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+~fftbuf = Buffer.alloc(s, 2048);
+~cepbuf = Buffer.alloc(s, 1024);
+
+(
+x = {
+    var son, chain, cepsch;
+
+    // You might like to try uncommenting these different source signals:
+    son = WhiteNoise.ar;
+    //son = Impulse.ar(150);
+    //son = SinOsc.ar(440);
+    //son = SinOsc.ar([150, 1450, 7203, 12010]).mean;
+
+    // Or these filters:
+    //son = MoogFF.ar(son, 5350) * 5;
+    //son = son + DelayN.ar(son, 0.003, 0.003);
+
+    chain = FFT(~fftbuf, son, wintype: 1);
+
+    cepsch = Cepstrum(~cepbuf, chain);
+
+    // PV_BrickWall can act as a low-pass filter, or here, as a wol-pass lifter...
+    // ...in practical terms, produces a smoothed version of the spectrum
+    cepsch = PV_BrickWall(cepsch, -0.95);
+
+    ICepstrum(cepsch, ~fftbuf);
+
+    // We'll stop the unit after 1 second, the results are visible quickly enough
+    Line.kr(1,0,1, doneAction: 2);
+
+    son * 0.1
+}.play;
+)
+(
+{
+//var son, chain, cepsch;
+
+// You might like to try uncommenting these different source signals:
+~son = WhiteNoise.ar;
+//son = Impulse.ar(150);
+//son = SinOsc.ar(440);
+//son = SinOsc.ar([150, 1450, 7203, 12010]).mean;
+
+// Or these filters:
+//son = MoogFF.ar(son, 5350) * 5;
+//son = son + DelayN.ar(son, 0.003, 0.003);
+
+~chain = FFT(~fftbuf, ~son, wintype: 1);
+
+~cepsch = Cepstrum(~cepbuf, ~chain);
+
+// PV_BrickWall can act as a low-pass filter, or here, as a wol-pass lifter...
+// ...in practical terms, produces a smoothed version of the spectrum
+~cepsch = PV_BrickWall(~cepsch, -0.95);
+
+ICepstrum(~cepsch, ~fftbuf);
+
+}.plot
+
+)
+
+
+
+
+
+// A convenience function to plot magnitudes:
+~plotmags = {|buf, lbl| buf.loadToFloatArray(action:{|data| {data[0,2..]  .max(0.000001)  .log.normalize  .plot(lbl)}.defer})};
+
+~plotmags.(~cepbuf, "cepstrum");
+~plotmags.(~fftbuf, "liftered (smoothed) spectrum");
+
+[~fftbuf, ~cepbuf].do(_.free);
+
+Chromagram
+
+(
+{
+
+var in, fft, chroma;
+
+in = SinOsc.ar(440,0,0.1);
+//in= SoundIn.ar;
+
+fft = FFT(LocalBuf(2048), in);
+
+chroma=Chromagram.kr(fft);
+
+chroma.poll;
+
+Out.ar(0,Pan2.ar(in));
+}.play
+)
+
+
+
+//n TET display
+
+n= 12; //19, 24
+
+(
+x = {
+
+var in, fft, chroma;
+
+in = SinOsc.ar(440,0,0.1);
+//in= SoundIn.ar;
+
+fft = FFT(LocalBuf(2048), in);
+
+chroma=Chromagram.kr(fft, 2048, n);
+
+//chroma=Chromagram.kr(fft, 2048, n, 36.midicps, 7, 1, 0.9);
+
+Out.kr(0,chroma);
+}.play;
+
+c= Bus.new('control', 0, n);
+
+)
+
+
+
+//poll coefficients snapshot
+c.getn(n,{arg val; {val.plot;}.defer});
+
+
+
+//Continuous graphical display of Chromagram values; free routine before closing window
+
+(
+var ms;
+
+w=Window.new((n.asString)++" chroma coefficients", Rect(200,400,n*20+50,300));
+
+ms= MultiSliderView.new(w, Rect(10,10,n*20,280));
+
+ms.value_(Array.fill(n,0.0));
+ms.valueThumbSize_(20.0);
+ms.indexThumbSize_(20.0);
+ms.gap_(0);
+
+w.front;
+
+r= {
+
+inf.do{
+
+c.getn(n,{arg val; {ms.value_(val)}.defer});
+
+0.04.wait; //25 frames per second
+};
+
+}.fork;
+
+w.onClose = {
+r.stop;
+c.free;
+x.free;
+};
+
+)
+
+
+
+b.free;
+
+
+
+//Bohlen-Pierce over 3 tritaves, normalized results per frame
+(
+{
+
+var in, fft, chroma;
+
+in = SinOsc.ar(440,0,0.1);
+//in= SoundIn.ar;
+
+fft = FFT(LocalBuf(2048), in);
+
+chroma=Chromagram.kr(fft,2048,13,octaves:3,octaveratio:3,perframenormalize:1);
+
+chroma.poll;
+
+Out.ar(0,Pan2.ar(in));
+}.play
+)
+
+
+OnsetStatistics
+
+//[0] density (number of onsets in window)
+//[1] mean IOI
+//[2] variance IOI
+​
+b = Buffer.read(s, Platform.resourceDir +/+ "sounds/a11wlk01.wav")
+​
+//minimal example
+(
+{
+    //var source = SoundIn.ar;
+​
+    var source = PlayBuf.ar(1,b,loop:1);
+
+    var onsetanalysis =
+    OnsetStatistics.kr(Onsets.kr(FFT(LocalBuf(512),source),0.125),2.0);
+​
+    onsetanalysis.poll(10);
+​
+    source
+}.play;
+)Dictionary
+
+
+(
+b = Dictionary.new;
+PathName(~folder).entries.do{
+	arg subfolder;
+	b.add(
+		subfolder.folderName.asSymbol ->
+		Array.fill(
+			subfolder.entries.size,
+			{
+				arg i;
+				Buffer.read(s, subfolder.entries[i].fullPath);
+			}
+		)
+	);
+};
+)
+
+b[\ESTRUTURAS]
+PathName(~folder).entries[0].entries.size
+/////////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////// FUNCTIONS EXPERIMENTS SECTION /////////////////////////////////////
 
 //--------------------------------------------------------------------------------------- Step 1
 
 ~folder = "../Sons/ESTRUTURAS/VOZ_LUANA/";
+~folder = "../Sons";
 //~folder = "../Sons/Vasos_Camila/;
 
 
