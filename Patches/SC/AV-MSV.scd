@@ -16,18 +16,7 @@ s.boot;
 OpenObject.start;
 s.scope;
 )
-Quarks.gui
 
-Cepstrum
-
-// If you installed the sc3-plugins to a user location:
-
-(
-~sc3plugs = Quarks("https://sc3-plugins.svn.sourceforge.net/svnroot/sc3-plugins/build", Platform.userAppSupportDir+/+ "SC3plugins");
-)
-
-~sc3plugs.gui;
-Quarks.addFolder(Platform.userAppSupportDir +/+ "SC3plugins")
 
 s.recSampleFormat_("int24");
 s.quit;
@@ -38,42 +27,24 @@ s.makeGui;
 //s.stopRecording;
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
+//-------------------------Testes Iniciais
+
+{PanAz.ar(6, WhiteNoise.ar(0.1) , pos: MouseX.kr(-1, 1), orientation: -3.0)}.play
+
+{Array.fill(1, PanAz.ar(3, {WhiteNoise.ar(0.1)}!2 , pos: MouseX.kr(-1, 1), orientation: -1.5)).reshape(6)}.play
+
+{Array.fill(1, PanAz.ar(1, {WhiteNoise.ar(0.1)}!6 , pos: MouseX.kr(-1, 1), orientation: -1.5)).reshape(6)}.play
 
 
 //------------------------- Choosing SoundBank folder
 
-~folder = "../Sons/ESTRUTURAS/VOZ_LUANA/";
-~folder = "../Sons/MADRIGAL_materiais";
+//~folder = "../Sons/ESTRUTURAS/VOZ_LUANA/";
+//~folder = "../Sons/MADRIGAL_materiais";
 //~folder = "../Sons/Vasos_Camila/";
 ~folder = "../Sons";
 
 
-//------------------------- Building an Array with the sound paths
-
-(var paths, soundPath;
-
-~paths = List[];
-
-//paths = Pipe.new("ls ../Sons/Vozes_Luana_BRC_Estudios/", "r");
-paths = Pipe.new("ls " + ~folder, "r");
-
-
-soundPath = paths.getLine;
-
-while({soundPath.notNil}, {
-
-		~paths = ~paths.add(soundPath);
-		soundPath = paths.getLine;
-
-});
-
-paths.close;
-
-
-
-
-~paths;
-)
+//------------------------- Building a Dictionary with the sound paths
 
 
 (
@@ -149,66 +120,15 @@ NdefPreset.all.clear
 )
 
 
+
 /////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-
-//-------------------------- Start/Reset a NodeProxy source and read a new buffer
-
-[\fj, \tre, \hdt][0]
-
-(
-
-~pbuf6 = Ndef(\playbuf6, {
-
-	PanAz.ar(6, PlayBuf.ar(1, bufnum: \bufnum.kr(45)), pos: \position.kr(-1), orientation: \orientatio.kr(-3.0) );
-});
-
-)
-
-~pbuf6.set(\bufnum, 45)
-
-~kbuf
-(
-~pbuf6 = Ndef(\playbuf6,
-	{
-		var sig;
-
-		sig = PlayBuf.ar(1, 45);
-
-		sig = PanAz.ar(6, sig, pos: 1.7);
-		Array.fill(1, sig).reshape(6)
-	}
-);
-)
 
 
 NdefMixer
 Mix
 MixedBundle
-(
 
-~pbuf6 = Ndef(\playbuf6,
-
-		{
-		var sig;
-		sig = PlayBuf.ar(1, 45);
-
-		sig = PanAz.ar(6,
-			in: sig,
-			pos: \pos.kr(-1),
-			level: \amp.kr(1.0),
-			orientation: \orientation.kr(-3.0)
-		);
-
-		//Reshaping
-
-		Array.fill(1, sig).reshape(6);
-		}
-
-	);
-
-)
+//-------------------------- Start/Reset a NodeProxy source and read a new buffer
 
 (
 m = {
@@ -239,62 +159,46 @@ m = {
 )
 
 
-
-
-
-
-
-~len.value(\Ceramicas_Amanda)
-
-
-
 (
-
 var folderKey, len;
 
-folderKey = \Ceramicas_Amanda;
+//folderKey = \Ceramicas_Amanda;
+folderKey = \Vozes_Mistro;
 len = ~len.value(folderKey);
 
+~kbufLoad = {
 
-~pathsDict[folderKey].wchoose(1/len !len)
+	~kbuf = Buffer.read(s,
+		path: ~pathsDict[folderKey].wchoose(1/len !len ),
+		startFrame: rand(100000).postln,
+		numFrames: 800000,
+		action: m,
+		bufnum: 45;
+	)
+};
 
-)
-PathName
+~kbufLoad2 = {
 
-
-
-
-(
-
-var folderKey, len;
-
-folderKey = \Ceramicas_Amanda;
-len = ~len.value(folderKey);
-
-~kbufLoad = {~kbuf = Buffer.read(s, ~pathsDict[folderKey].wchoose(1/len !len ), startFrame: rand(100000).postln, numFrames: 800000, action: m, bufnum: 45);};
-~kbufLoad2 = {~kbuf2 = Buffer.read(s, ~pathsDict[folderKey].wchoose(1/len !len ), startFrame: rand(100000).postln, numFrames: 800000, action: m, bufnum: 46);};
-
-
-)
-(
-
-var len;
-len = ~paths.size;
-
-~kbufLoad = {~kbuf = Buffer.read(s, ~folder +/+ ~paths.wchoose(1/len !len ), startFrame: rand(10000000).postln, numFrames: 800000, action: m, bufnum: 45);};
-~kbufLoad2 = {~kbuf2 = Buffer.read(s, ~folder +/+ ~paths.wchoose(1/len !len ), startFrame: rand(10000000).postln, numFrames: 800000, action: m, bufnum: 46);};
-
-
+	~kbuf2 = Buffer.read(s,
+		path: ~pathsDict[folderKey].wchoose(1/len !len ),
+		startFrame: rand(100000).postln,
+		numFrames: 800000,
+		action: m,
+		bufnum: 46;
+	)
+};
 )
 
+//----Routines
 
-[1,2].choose
-~kbuf
-~kbuf.numChannels
 ~kbufLoad.fork
-
+~len.value(\Vozes_Mistro);
+~pathsDict[\Vozes_Mistro]
 (
 j.stop;
+
+~pbuf6.play;
+
 j = {var len;
 	len = ~paths.size;
 	inf.do{
@@ -304,7 +208,7 @@ j = {var len;
 
 	~kbufLoad.fork;
 	0.1.wait;
-	(~kbuf.duration/2).wait;
+	(~kbuf.duration/1.01).wait;
 
 
 		~modulatorNdef.set(\freq, [ linrand(-0.5) + 0.5, rand(1000) + 200].choose.postln);
@@ -321,21 +225,7 @@ j = {var len;
 j.play;
 j.reset;
 j.stop;
-Routine
-Buffer
-~kbuf.free
-Ndef.ar(\playbuf6, 6)
-~pbuf6.reshaping = \elastic;
-~kbuf.numFrames
-~kbuf.duration.postln
-
-~kbuf
-~test
-
-~kbuf = Buffer.read(s, ~folder +/+ ~paths.choose(0,1), numFrames: 800000, bufnum: 45);
-
-~test = {~kbuf = Buffer.read(s, ~folder +/+ ~paths.wchoose(1/2 !2 ), numFrames: 800000, action: m, bufnum: 45);}
-~test.fork
+~pbuf6.stop
 
 //--------------------------- Controlling parameters
 
@@ -349,11 +239,11 @@ Ndef(~as)
 //--- sets and static controls
 
 ~pbuf6.set(\bufnum, 1);
-~pbuf6.set(\position, -1)
+~pbuf6.set(\pos, 0)
 ~pbuf6.set(\bufnum, 10)
 
 ~pbuf6.set(\orientatio, -3)
-
+~kbufLoad.fork
 //---- With NdefPreset
 
 ~pbuf6Preset.xfadeTo(\coco, 3);
@@ -387,47 +277,28 @@ Ndef(~as)
 ~pbuf6.map(\orientatio, ~mouseXNdef);
 ~pbuf6.map(\orientatio, nil);
 
-~pbuf6.map(\position, ~mouseXNdef);
-~pbuf6.map(\position, ~modulatorNdef);
-~pbuf6.map(\position, nil);
+~pbuf6.map(\pos, ~mouseXNdef);
+~pbuf6.map(\pos, ~modulatorNdef);
+~pbuf6.map(\pos, nil);
 
 ~mouseXNdef.set(\lim, 3)
 ~modulatorNdef.set(\freq, 1.2)
 
-n = NodeProxy.new;
-n.play;
-n.fadeTime = 1;
-r = Ndef(\playbuf6)
-n.source = v;
-n.source = Ndef(\playbuf6, v)
-n.source = {Impulse.ar(1)}
-v.set([\bufnum, 2])
-
-
-Ndef(\playbuf6).set(\bufnum, 1.1)
-
-
-
-
-x.set([\orientatio, 2.01])
-w.set([\bufnum, 1])
-
-
-
-r = Ndef(\playbuf6)
-r.play
 
 
 //--------------------------- Objects analysis
 
-
 s.scope
 s.queryAllNodes;
 
-x;
-x.trace;
 
-k;
+
+
+
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
 
 
 Ndef(\sound).play;

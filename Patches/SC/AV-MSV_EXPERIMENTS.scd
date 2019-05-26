@@ -261,6 +261,52 @@ PathName(~folder).entries[0].entries.size
 /////////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////// FUNCTIONS EXPERIMENTS SECTION /////////////////////////////////////
 
+
+(
+
+~pbuf6 = Ndef(\playbuf6,
+
+		{
+		var sig;
+		sig = PlayBuf.ar(1, 45);
+
+		sig = PanAz.ar(6,
+			in: sig,
+			pos: \pos.kr(-1),
+			level: \amp.kr(1.0),
+			orientation: \orientation.kr(-3.0)
+		);
+
+		//Reshaping
+
+		Array.fill(1, sig).reshape(6);
+		}
+
+	);
+
+)
+
+Ndef.ar(\playbuf6, 6)
+~pbuf6.reshaping = \elastic;
+~kbuf.numFrames
+~kbuf.duration.postln
+~kbuf.free
+
+
+
+~kbuf = Buffer.read(s, ~folder +/+ ~paths.choose(0,1), numFrames: 800000, bufnum: 45);
+
+~test = {~kbuf = Buffer.read(s, ~folder +/+ ~paths.wchoose(1/2 !2 ), numFrames: 800000, action: m, bufnum: 45);}
+~test.fork
+n = NodeProxy.new;
+n.play;
+n.fadeTime = 1;
+r = Ndef(\playbuf6)
+n.source = v;
+n.source = Ndef(\playbuf6, v)
+n.source = {Impulse.ar(1)}
+v.set([\bufnum, 2])
+
 //--------------------------------------------------------------------------------------- Step 1
 
 ~folder = "../Sons/ESTRUTURAS/VOZ_LUANA/";
