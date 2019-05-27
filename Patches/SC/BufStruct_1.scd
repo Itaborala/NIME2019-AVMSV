@@ -27,16 +27,16 @@ s.makeGui;
 //s.stopRecording;
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-//-------------------------Testes Iniciais
+//--------------------------------- Testes Iniciais
 
-{PanAz.ar(6, WhiteNoise.ar(0.1) , pos: MouseX.kr(-1, 1), orientation: -3.0)}.play
-
+x = {PanAz.ar(6, WhiteNoise.ar(0.1) , pos: MouseX.kr(-1, 1), orientation: -3.0)}.play
+x.free
 {Array.fill(1, PanAz.ar(3, {WhiteNoise.ar(0.1)}!2 , pos: MouseX.kr(-1, 1), orientation: -1.5)).reshape(6)}.play
 
 {Array.fill(1, PanAz.ar(1, {WhiteNoise.ar(0.1)}!6 , pos: MouseX.kr(-1, 1), orientation: -1.5)).reshape(6)}.play
 
 
-//------------------------- Choosing SoundBank folder
+//--------------------------------- Choosing SoundBank folder
 
 //~folder = "../Sons/ESTRUTURAS/VOZ_LUANA/";
 //~folder = "../Sons/MADRIGAL_materiais";
@@ -44,7 +44,7 @@ s.makeGui;
 ~folder = "../Sons";
 
 
-//------------------------- Building a Dictionary with the sound paths
+//--------------------------------- Building a Dictionary with the sound paths
 
 
 (
@@ -68,45 +68,70 @@ PathName(~folder).entries.do{
 ~pathsDict
 )
 
+//---------------------------------- Declaring Global Variables and Functions
+
+//--- Tracks all instances of a node group
+//--- that are not being used
+~pbuf6AvailableNodes = SortedList.new(8, function: {|a, b| a > b});
+10.do{arg i; ~pbuf6AvailableNodes.add(i); ~pbuf6AvailableNodes};
+~pbuf6AvailableNodes
+~pbuf6AvailableNodes.clear
+
+~availableNodesReset = {~pbuf6AvailableNodes.clear; 10.do{arg i; ~pbuf6AvailableNodes.add(i)};};
+
+//--- Helps breaking the task loop properly
+~stop = Array.fill(10, Condition(false));
+~stop
+
+//--- Holds the subfolder keys that
+//--- will be read by each group respectively
+~folderKey = Array.fill(10, \Ceramicas_Amanda);
+~folderKey
+
+//--- Stores All Buffers
+~kbuf = Array.fill(10);
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-//NDEF VERSION
-//-------------------------- Buffer NDefs and Presets
+//---------------------------------- Main Ndef
+
+//--- Declaring \playbuf6
 
 (
 Ndef.new(\playbuf6).ar(6);
 ~pbuf6 = Ndef(\playbuf6);
-~pbuf6FadeTime = 3;
-~pbuf6.fadeTime = ~pbuf6FadeTime;
-~pbuf6.addSpec(\position, [-1, 1, \lin]);
-~pbuf6.addSpec(\bufnum, [0, 1, \lin]);
-NdefPreset.new(Ndef(\playbuf6), [\bufnum, \position]);
-~pbuf6Preset = NdefPreset(Ndef(\playbuf6));
-~pbuf6Preset.addSet(\cucu, [[\bufnum, 0], [\position, -1]]);
-~pbuf6Preset.addSet(\coco, [[\bufnum, 0], [\position, -0.5]]);
+~pbuf6FadeTime = 1;
 )
 
-~pbuf6.play
-~pbuf6_2 = ~pbuf6.copy(\pbuf6_2)
+//--- Declaring NodeProxy sources at all instances
+(
+10.do{ arg i;
+~pbuf6.put(i,
+	{
 
-//--- printing options
+		var sig;
 
-~pbuf6Preset.settings.printcsAll;"";
-~pbuf6Preset.getSetNames;
-~pbuf6Preset.getCurr;
-~pbuf6Preset.settingsString;
-~pbuf6Preset.checkSpecsMissing;
-~pbuf6Preset.namesToStore;
+		sig = PlayBuf.ar(1, \bufn.kr(0), doneAction:2);
 
-Ndef.all
-Ndef.all.clear
+		sig = PanAz.ar(6,
+			in: sig,
+			pos: LFNoise2.kr(1),
+			level: \amp.kr(1.0),
+			orientation: \orientation.kr(-3.0)
+		);
 
-NdefPreset.all
-NdefPreset.all.clear
+		//Reshaping
 
+		Array.fill(1, sig).reshape(6);
+	},
 
-//-------------------------- Control Ndefs
+	now: false
+);
+}
+)
+~pbuf6.sources
+
+//---------------------------------- Control Ndefs
 
 (
 ~modulatorNdef = Ndef(\modulator, {
@@ -132,42 +157,39 @@ NdefPreset.all.clear
 )
 
 
+//---------------------------------- NDefPresets
+
+//--- Presets for \playbuf6
+(
+~pbuf6.fadeTime = ~pbuf6FadeTime;
+~pbuf6.addSpec(\position, [-1, 1, \lin]);
+~pbuf6.addSpec(\bufnum, [0, 1, \lin]);
+NdefPreset.new(Ndef(\playbuf6), [\bufnum, \position]);
+~pbuf6Preset = NdefPreset(Ndef(\playbuf6));
+~pbuf6Preset.addSet(\cucu, [[\bufnum, 0], [\position, -1]]);
+~pbuf6Preset.addSet(\coco, [[\bufnum, 0], [\position, -0.5]]);
+)
+
+~pbuf6.play
+
+//--- printing options
+
+~pbuf6Preset.settings.printcsAll;"";
+~pbuf6Preset.getSetNames;
+~pbuf6Preset.getCurr;
+~pbuf6Preset.settingsString;
+~pbuf6Preset.checkSpecsMissing;
+~pbuf6Preset.namesToStore;
+
+Ndef.all
+Ndef.all.clear
+
+NdefPreset.all
+NdefPreset.all.clear
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-//-------------------------- Start/Reset a NodeProxy source and read a new buffer
 
-~pbuf6.sources
-
-(
-~pbuf6.put(0,
-	{
-
-		var sig;
-
-		sig = PlayBuf.ar(1, \bufn.kr(0));
-
-		sig = PanAz.ar(6,
-			in: sig,
-			pos: \pos.kr(-1),
-			level: \amp.kr(1.0),
-			orientation: \orientation.kr(-3.0)
-		);
-
-		//Reshaping
-
-		Array.fill(1, sig).reshape(6);
-	},
-
-	now: false
-);
-)
-Line
-//////////
-////////////////////////////////////////////////
-~pbuf6.send([\bufn, 2], 1)
-////////////////////////////////////////////////
-/////////
 
 (
 c = {
@@ -175,16 +197,14 @@ c = {
 	buf.close;
 
 	("reading buffer:" + buf).postln;
-	~pbufTdef
+	//~pbufTdef
 
 };
 )
 
-~folderKey = \Ceramicas_Amanda;
-//~folderKey = \Vozes_Mistro;
-//len = ~len.value(folderKey);
-~kbuf
-~kbuf = Array.fill(16)
+
+
+
 (
 ~kbufRead = {
 	arg bufn = 15, key = \Vozes_Mistro;
@@ -194,7 +214,7 @@ c = {
 	~kbuf[bufn] = Buffer.read(s,
 		path: ~pathsDict[key].wchoose(1/len !len ),
 		startFrame: rand(10000),
-		numFrames: 600000,
+		numFrames: 400000,
 		action: c,
 		bufnum: bufn;
 	);
@@ -202,50 +222,100 @@ c = {
 	"reading buffer....";
 };
 )
-~kbufRead.value(2, \Ceramicas_Amanda)
-~kbuf[2].duration
 
-//----Routine
-~pbuf6.play
+~kbufRead.value(0, \Ceramicas_Amanda)
+~kbufRead.value(1, \Ceramicas_Amanda)
+~kbufRead.value(2, \Ceramicas_Amanda)
+~kbufRead.value(8, \Ceramicas_Amanda)
+
+f = { 4.do({ "Threading...".postln; 1.wait;}) };
+f.forkIfNeeded;
+{ "we are now in a routine".postln; 1.wait; f.forkIfNeeded }.fork;
 
 (
 ~pbufTdef = Tdef(\l,
 	{
+
+
+		var nodeIndex;
+
 		~pbuf6.play;
-		~pbuf6.map(\pos, nil);
-		~pbuf6.map(\pos, ~ctrl_pos);
+		//~pbuf6.map(\pos, nil);
+		//~pbuf6.map(\pos, ~ctrl_pos);
+
+		nodeIndex = ~pbuf6AvailableNodes.pop;
+		//("something" + yay).postln;
+		("Task Running at node group " + ~pbuf6.nodeID + " instance " + nodeIndex).postln;
+
+		~stop[nodeIndex].test = false;
+
+		block {|break|
+
+			inf.do{
 
 
-		loop {
+			~pbuf6.send([\bufn, 3*nodeIndex +0], nodeIndex);
+			("playing buffer ----"+ ~kbuf[3*nodeIndex +0].bufnum +"----"+ PathName(~kbuf[3*nodeIndex +0].path).fileName).postln;
+			~kbufRead.value(3*nodeIndex +1, key: ~folderKey[nodeIndex]);
+			(~kbuf[3*nodeIndex +0].duration - ~pbuf6FadeTime/2).wait;
 
+				if(~stop[nodeIndex].test == true) { break.value(999) };
 
-			~pbuf6.send([\bufn, 2], 0);
-			("playing buffer ---- 2 ----" + PathName(~kbuf[2].path).fileName).postln;
-			~kbufRead.value(3, key: ~folderKey);
-			(~kbuf[2].duration - ~pbuf6FadeTime/2).wait;
+			~pbuf6.send([\bufn, 3*nodeIndex +1], nodeIndex);
+			("playing buffer ----"+ ~kbuf[3*nodeIndex +1].bufnum +"----"+ PathName(~kbuf[3*nodeIndex +1].path).fileName).postln;
+			~kbufRead.value(3*nodeIndex +2, key: ~folderKey[nodeIndex]);
+			(~kbuf[3*nodeIndex +1].duration - ~pbuf6FadeTime/2).wait;
 
-			~pbuf6.send([\bufn, 3], 0);
-			("playing buffer ---- 3 ----" + PathName(~kbuf[3].path).fileName).postln;
-			~kbufRead.value(1, key: ~folderKey);
-			(~kbuf[3].duration - ~pbuf6FadeTime/2).wait;
+				if(~stop[nodeIndex].test == true) { break.value(999) };
 
-			~pbuf6.send([\bufn, 1], 0);
-			("playing buffer ---- 1 ----" + PathName(~kbuf[1].path).fileName).postln;
-			~kbufRead.value(2, key: ~folderKey);
-			(~kbuf[1].duration - ~pbuf6FadeTime/2).wait;
+			~pbuf6.send([\bufn, 3*nodeIndex +2], nodeIndex);
+			("playing buffer ----"+ ~kbuf[3*nodeIndex +2].bufnum +"----"+ PathName(~kbuf[3*nodeIndex +2].path).fileName).postln;
+			~kbufRead.value(3*nodeIndex +0, key: ~folderKey[nodeIndex]);
+			(~kbuf[3*nodeIndex +2].duration - ~pbuf6FadeTime/2).wait;
 
+				if(~stop[nodeIndex].test == true) { break.value(999) };
 
-
-		}.fork;
-
+		};
+		};
+		~pbuf6AvailableNodes.add(nodeIndex);
+		("Ending Task at node group " + ~pbuf6.nodeID + " instance " + nodeIndex).postln;
 
 	};
 
 );
 )
-(~kbuf.duration - ~pbuf6FadeTime/2.1)
-~pbufTdef.play;
+~kbuf
+~pbuf6AvailableNodes
+(
+
+{
+~folderKey[1] = \Vozes_Mistro;
+~folderKey[2] = \Tratados;
+
+~t1 = ~pbufTdef.fork;
+2.0.wait;
+~t2 = ~pbufTdef.fork;
+2.0.wait;
+~t3 = ~pbufTdef.fork;
+
+}.fork
+)
+~t4 = ~pbufTdef.fork
+(
+~stop[0].test = true;
+~stop[1].test = true;
+~stop[2].test = true;
+
+)
+
+~stop[6].test
+(
 ~pbufTdef.stop;
+~availableNodesReset.value;
+~pbuf6AvailableNodes
+)
+
+
 ~pbufTdef.reset;
 ~pbufTdef.next;
 
