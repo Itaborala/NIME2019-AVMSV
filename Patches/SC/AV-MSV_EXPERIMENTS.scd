@@ -24,7 +24,33 @@ s.makeGui;
 //s.stopRecording;
 /////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////
+(
+j.stop;
 
+~pbuf6.play;
+
+j = {var len;
+	len = ~paths.size;
+	inf.do{
+
+		~modulatorNdef.set(\freq, [ linrand(-0.5) + 0.5, rand(1000) + 200].choose.postln);
+
+
+	~kbufLoad.fork;
+	0.1.wait;
+	(~kbuf.duration/1.3).wait;
+
+
+		~modulatorNdef.set(\freq, [ linrand(-0.5) + 0.5, rand(1000) + 200].choose.postln);
+
+
+	~kbufLoad2.fork;
+	0.1.wait;
+	(~kbuf.duration/1.3).wait;
+	}
+}.fork
+
+)
 
 ~fftbuf = Buffer.alloc(s, 2048);
 ~cepbuf = Buffer.alloc(s, 1024);

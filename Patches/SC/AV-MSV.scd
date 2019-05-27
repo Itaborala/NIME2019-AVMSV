@@ -16,7 +16,7 @@ s.boot;
 OpenObject.start;
 s.scope;
 )
-
+s.scope
 
 s.recSampleFormat_("int24");
 s.quit;
@@ -77,7 +77,8 @@ PathName(~folder).entries.do{
 (
 Ndef.new(\playbuf6).ar(6);
 ~pbuf6 = Ndef(\playbuf6);
-~pbuf6.fadeTime = 3;
+~pbuf6FadeTime = 3;
+~pbuf6.fadeTime = ~pbuf6FadeTime;
 ~pbuf6.addSpec(\position, [-1, 1, \lin]);
 ~pbuf6.addSpec(\bufnum, [0, 1, \lin]);
 NdefPreset.new(Ndef(\playbuf6), [\bufnum, \position]);
@@ -87,7 +88,7 @@ NdefPreset.new(Ndef(\playbuf6), [\bufnum, \position]);
 )
 
 ~pbuf6.play
-
+~pbuf6_2 = ~pbuf6.copy(\pbuf6_2)
 
 //--- printing options
 
@@ -108,7 +109,6 @@ NdefPreset.all.clear
 //-------------------------- Control Ndefs
 
 (
-
 ~modulatorNdef = Ndef(\modulator, {
 	SinOsc.kr(\freq.kr(1)).range(-2,2);
 }).add;
@@ -116,6 +116,10 @@ NdefPreset.all.clear
 ~mouseXNdef = Ndef(\control_mouseXs1, { |lim=1|
 	MouseX.kr(-1*lim, lim);
 }).add;
+
+
+
+~ctrl_pos = Ndef(\control_pos, ~modulatorNdef.source);
 
 )
 
@@ -127,21 +131,41 @@ NdefPreset.all.clear
 NdefMixer
 Mix
 MixedBundle
-
+Done
 //-------------------------- Start/Reset a NodeProxy source and read a new buffer
 
+~pbuf6.sources
+
+(
+~pbuf6[1] = {
+		var sig;
+
+		sig = PlayBuf.ar(1, \bufn.kr(47), doneAction: 2);
+
+		sig = PanAz.ar(6,
+			in: sig,
+			pos: \pos.kr(-1),
+			level: \amp.kr(1.0),
+			orientation: \orientation.kr(-3.0)
+		);
+
+		//Reshaping
+
+		Array.fill(1, sig).reshape(6);
+	}
+
+
+)
+~kbufLoad3.fork
 (
 m = {
 	arg buf;
 	buf.close;
 	buf.postln;
 
-	~pbuf6 = Ndef(\playbuf6,
+	~pbuf6[0] = {var sig;
 
-		{
-		var sig;
-
-		sig = PlayBuf.ar(1, buf.bufnum);
+		sig = PlayBuf.ar(1, \bufn.kr(buf.bufnum), doneAction: 2);
 
 		sig = PanAz.ar(6,
 			in: sig,
@@ -154,10 +178,38 @@ m = {
 
 		Array.fill(1, sig).reshape(6);
 		}
-	);
+
 };
 )
+//////////
+////////////////////////////////////////////////
+~pbuf6.send([\bufn, 45], 0)
+////////////////////////////////////////////////
+/////////
+(
+n = {
+	arg buf, ind;
+	buf.close;
+	buf.postln;
 
+	~pbuf6[1] = {var sig;
+
+		sig = PlayBuf.ar(1, \bufn.kr(buf.bufnum), doneAction: 2);
+
+		sig = PanAz.ar(6,
+			in: sig,
+			pos: \pos.kr(-1),
+			level: \amp.kr(1.0),
+			orientation: \orientation.kr(-3.0)
+		);
+
+		//Reshaping
+
+		Array.fill(1, sig).reshape(6);
+		}
+
+};
+)
 
 (
 var folderKey, len;
@@ -187,45 +239,75 @@ len = ~len.value(folderKey);
 		bufnum: 46;
 	)
 };
+
+~kbufLoad3 = {
+
+	~kbuf3 = Buffer.read(s,
+		path: ~pathsDict[folderKey].wchoose(1/len !len ),
+		startFrame: rand(100000).postln,
+		numFrames: 800000,
+		action: n,
+		bufnum: 47;
+	)
+};
+
 )
 
 //----Routines
 
-~kbufLoad.fork
+~kbufLoad2.fork
 ~len.value(\Vozes_Mistro);
 ~pathsDict[\Vozes_Mistro]
+
+~pbuf6[0].send
+
+
 (
-j.stop;
-
-~pbuf6.play;
-
-j = {var len;
-	len = ~paths.size;
-	inf.do{
-
-		~modulatorNdef.set(\freq, [ linrand(-0.5) + 0.5, rand(1000) + 200].choose.postln);
+~pbufTdef = Tdef(\l,
+	{
+		~pbuf6.play;
+		~pbuf6.map(\pos, nil);
+		~pbuf6.map(\pos, ~ctrl_pos);
 
 
-	~kbufLoad.fork;
-	0.1.wait;
-	(~kbuf.duration/1.01).wait;
+		loop {
+
+			~modulatorNdef.set(
+				\freq, [ linrand(-0.5) + 0.5, rand(1000) + 200].choose.postln);
 
 
-		~modulatorNdef.set(\freq, [ linrand(-0.5) + 0.5, rand(1000) + 200].choose.postln);
+			~kbufLoad.fork;
+
+			0.1.wait; (~kbuf.duration - ~pbuf6FadeTime/2.1).wait;
+
+			~modulatorNdef.set(
+				\freq, [ linrand(-0.5) + 0.5, rand(1000) + 200].choose.postln);
 
 
-	~kbufLoad2.fork;
-	0.1.wait;
-	(~kbuf.duration/1.3).wait;
-	}
-}.fork
+			~kbufLoad2.fork;
 
+			0.1.wait; (~kbuf2.duration - ~pbuf6FadeTime/2.1).wait;
+
+		};
+
+
+	};
+
+);
 )
+
+~pbufTdef.play;
+~pbufTdef.stop;
+
+~pbuf6[0].play
+~ctrl_pos
+~ctrl_pos.source = ~modulatorNdef;
+~ctrl_pos.source = ~mouseXNdef;
 
 j.play;
 j.reset;
 j.stop;
-~pbuf6.stop
+~pbuf6.source.do(_.postcs);
 
 //--------------------------- Controlling parameters
 
@@ -263,7 +345,7 @@ Ndef(~as)
 ~pbuf6 <<>.position ~modutalorNdef;
 
 
-~pbuf6 <<>.position nil;
+~pbuf6 <<>.pos nil;
 ~pbuf6 <<>.position ~mouseXNdef;
 
 ~pbuf6 <<>.orientatio nil;
@@ -279,12 +361,15 @@ Ndef(~as)
 
 ~pbuf6.map(\pos, ~mouseXNdef);
 ~pbuf6.map(\pos, ~modulatorNdef);
+~pbuf6.map(\pos, ~ctrl_pos);
 ~pbuf6.map(\pos, nil);
 
 ~mouseXNdef.set(\lim, 3)
 ~modulatorNdef.set(\freq, 1.2)
 
+~pbuf6.group
 
+Ndef.dictFor(s);
 
 //--------------------------- Objects analysis
 
@@ -319,7 +404,27 @@ b = Pbind(\note, Pseq([5, 10, 12], 4), \dur, 1);
 Ppar([ a, b ]).play;
 )
 
+
+
+
+Ndef(\maus, { MouseX.kr });
+Ndef(\haus, { Blip.ar(Ndef.kr(\maus) * 70) }).play;
+Ndef(\haus).reshaping = \elastic;
+Ndef(\maus).reshaping = \elastic;
+Ndef(\maus, { LFNoise0.kr(1 ! 8) + 1 }); // now 8 parallel channels of audio are audible.
+
 Cepstrum
+
+// put can be used with the array indexing syntax:
+a = NodeProxy.new.play;
+a[0] = { SinOsc.ar(Rand(200, 899)) * 0.1.dup };
+a[2] = { SinOsc.ar(Rand(200, 899)) * 0.1.dup };
+a.sources.do(_.postcs);
+// using multiple index expands into multiple objects
+a[0..5] = { SinOsc.ar(Rand(200, 899)) * 0.1.dup };
+a.sources.do(_.postcs);
+a.send; // exchange synths, using the sources as definitions
+a.clear;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
