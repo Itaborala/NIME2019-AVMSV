@@ -609,15 +609,24 @@ s.boot
 
 OpenObject.start
 
-b= Buffer.read(s, "NIME2019-AVMSV/Sons/Vasos_Camila/ataques_vasos_01.wav")
-b= Buffer.read(s, "NIME2019-AVMSV/Sons/ESTRUTURAS/VOZ_LUANA/SussurroMouseXY_01.wav")
+b= Buffer.read(s, "..//Sons/Vasos_Camila/ataques_vasos_01.wav")
+b= Buffer.read(s, "../Sons/ESTRUTURAS/VOZ_LUANA/SussurroMouseXY_01.wav")
+
+b.close
 (
-SynthDef(\vasoread, { |bufnum, amp= 0, freq= 10, rate= 1, offset= 0, dur= 0.3, pan= 0|
+SynthDef(\vasoread, { |bufnum=3, amp= 0, freq= 10, rate= 1, offset= 0, dur= 0.3, pan= 0|
 	Out.ar(0, TGrains.ar(2, Impulse.ar(freq), bufnum, rate, offset*BufDur.ir(b), dur, pan, amp));
 }).add;
 )
 
-x= Synth(\vasoread)
+
+(
+SynthDef(\vaso, {|freq=440|  Out.ar(0, 0.2*SinOsc.ar(freq))}).add;
+
+)
+
+
+x= Synth(\vaso)
 x.publish(\vasoX)
 
 x.unpublish(\vasoX)

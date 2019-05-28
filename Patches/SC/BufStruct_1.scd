@@ -26,10 +26,10 @@ s.makeGui;
 //s.record;
 //s.stopRecording;
 /////////////////////////////////////////////////////////////////////////////////////////////////
-
+//--- rate de leitura, sons muito concretos, tocar os mesmos buffers com novos processamentos
 //--------------------------------- Testes Iniciais
 
-x = {PanAz.ar(6, WhiteNoise.ar(0.1) , pos: MouseX.kr(-1, 1), orientation: -3.0)}.play
+x = {PanAz.ar(6, WhiteNoise.ar(0.05) , pos: MouseX.kr(-1, 1), orientation: -3.0)}.play
 x.free
 {Array.fill(1, PanAz.ar(3, {WhiteNoise.ar(0.1)}!2 , pos: MouseX.kr(-1, 1), orientation: -1.5)).reshape(6)}.play
 
@@ -69,30 +69,38 @@ PathName(~folder).entries.do{
 )
 
 //---------------------------------- Declaring Global Variables and Functions
-
+(
 //--- Tracks all instances of a node group
 //--- that are not being used
-~pbuf6AvailableNodes = SortedList.new(8, function: {|a, b| a > b});
-10.do{arg i; ~pbuf6AvailableNodes.add(i); ~pbuf6AvailableNodes};
-~pbuf6AvailableNodes
-~pbuf6AvailableNodes.clear
 
-~availableNodesReset = {~pbuf6AvailableNodes.clear; 10.do{arg i; ~pbuf6AvailableNodes.add(i)};};
+~pbuf6AvailableNodes = SortedList.new(8, function: {|a, b| a > b});
+30.do{arg i; ~pbuf6AvailableNodes.add(i); ~pbuf6AvailableNodes};
+~pbuf6AvailableNodes;
+//~pbuf6AvailableNodes.clear
+
+~availableNodesReset = {~pbuf6AvailableNodes.clear; 30.do{arg i; ~pbuf6AvailableNodes.add(i)};};
 
 //--- Helps breaking the task loop properly
-~stop = Array.fill(10, Condition(false));
-~stop
+~stop = Array.fill(30, Condition(false));
+~stop;
 
 //--- Holds the subfolder keys that
 //--- will be read by each group respectively
-~folderKey = Array.fill(10, \Ceramicas_Amanda);
-~folderKey
+~folderKey = Array.fill(30, \Silence);
+~folderKey;
 
 //--- Stores All Buffers
-~kbuf = Array.fill(10);
+//~kbuf = Array.fill(90, {|i| Buffer.new(s, numFrames: 40000, numChannels: 1, bufnum: i)});
+~kbuf = Array.fill(90);
 
+//--- Stores Tdefs forks plus one to avoid overload
+~st1 = Array.fill(100);
+
+
+)
 /////////////////////////////////////////////////////////////////////////////////////////////////
-
+~st1 = Array.fill(100);
+~folderKey = Array.fill(10, \Ceramicas_Amanda);
 //---------------------------------- Main Ndef
 
 //--- Declaring \playbuf6
@@ -105,18 +113,18 @@ Ndef.new(\playbuf6).ar(6);
 
 //--- Declaring NodeProxy sources at all instances
 (
-10.do{ arg i;
+~pbuf6instances = 30.do{ arg i;
 ~pbuf6.put(i,
 	{
 
 		var sig;
 
-		sig = PlayBuf.ar(1, \bufn.kr(0), doneAction:2);
+		sig = PlayBuf.ar(1, \bufn.kr(0), rate: rand(0.3) + 7.5, doneAction:2);
 
 		sig = PanAz.ar(6,
 			in: sig,
 			pos: LFNoise2.kr(1),
-			level: \amp.kr(1.0),
+			level: (rand(0.5)+0.5),
 			orientation: \orientation.kr(-3.0)
 		);
 
@@ -130,6 +138,9 @@ Ndef.new(\playbuf6).ar(6);
 }
 )
 ~pbuf6.sources
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
 
 //---------------------------------- Control Ndefs
 
@@ -162,6 +173,8 @@ Ndef.new(\playbuf6).ar(6);
 //--- Presets for \playbuf6
 (
 ~pbuf6.fadeTime = ~pbuf6FadeTime;
+)
+(
 ~pbuf6.addSpec(\position, [-1, 1, \lin]);
 ~pbuf6.addSpec(\bufnum, [0, 1, \lin]);
 NdefPreset.new(Ndef(\playbuf6), [\bufnum, \position]);
@@ -189,8 +202,9 @@ NdefPreset.all.clear
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
+//---------------------------------- Buffer Read Function
 
-
+//-- Completion action
 (
 c = {
 	arg buf;
@@ -207,14 +221,14 @@ c = {
 
 (
 ~kbufRead = {
-	arg bufn = 15, key = \Vozes_Mistro;
+	arg bufn = 0, key = \Silence, frames= -1;
 
 	var len = ~len.value(key);
 
 	~kbuf[bufn] = Buffer.read(s,
 		path: ~pathsDict[key].wchoose(1/len !len ),
-		startFrame: rand(10000),
-		numFrames: 400000,
+		startFrame: rand(1000),
+		numFrames: frames,
 		action: c,
 		bufnum: bufn;
 	);
@@ -223,115 +237,263 @@ c = {
 };
 )
 
-~kbufRead.value(0, \Ceramicas_Amanda)
-~kbufRead.value(1, \Ceramicas_Amanda)
-~kbufRead.value(2, \Ceramicas_Amanda)
-~kbufRead.value(8, \Ceramicas_Amanda)
+//-- You need to initialize all the available
+//-- buffers before forking routines and tasks
 
-f = { 4.do({ "Threading...".postln; 1.wait;}) };
-f.forkIfNeeded;
-{ "we are now in a routine".postln; 1.wait; f.forkIfNeeded }.fork;
+90.do{|i| ~kbufRead.value(i)};
+~kbuf
 
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
+//---------------------------------- Buffer Structure source
+rand
+~kbuf[0].duration
 (
-~pbufTdef = Tdef(\l,
+~pbufTdef = Tdef(\BufStruct,
 	{
 
-
+		|args|
 		var nodeIndex;
+		//args[\yay].postln;
 
-		~pbuf6.play;
 		//~pbuf6.map(\pos, nil);
 		//~pbuf6.map(\pos, ~ctrl_pos);
 
 		nodeIndex = ~pbuf6AvailableNodes.pop;
-		//("something" + yay).postln;
-		("Task Running at node group " + ~pbuf6.nodeID + " instance " + nodeIndex).postln;
 
-		~stop[nodeIndex].test = false;
+		if(nodeIndex == nil,
+			{ ("All group instances taken!!").postln},
 
-		block {|break|
+			{
+				//~pbuf6.play;
+				("Task Running at node group " + ~pbuf6.nodeID + " instance " + nodeIndex).postln;
+				~stop[nodeIndex].test = false;
 
-			inf.do{
+				block {|break|
+
+					inf.do{
 
 
-			~pbuf6.send([\bufn, 3*nodeIndex +0], nodeIndex);
-			("playing buffer ----"+ ~kbuf[3*nodeIndex +0].bufnum +"----"+ PathName(~kbuf[3*nodeIndex +0].path).fileName).postln;
-			~kbufRead.value(3*nodeIndex +1, key: ~folderKey[nodeIndex]);
-			(~kbuf[3*nodeIndex +0].duration - ~pbuf6FadeTime/2).wait;
+						~pbuf6.send([\bufn, 3*nodeIndex +0], nodeIndex);
+						("playing buffer ----"+
+							~kbuf[3*nodeIndex +0].bufnum +"----"+
+							~kbuf[3*nodeIndex +2].duration + "s " +
+							PathName(~kbuf[3*nodeIndex +0].path).fileName).postln;
 
-				if(~stop[nodeIndex].test == true) { break.value(999) };
+						~kbufRead.value(3*nodeIndex +1,
+							key: ~folderKey[nodeIndex],
+							frames: case
+							{args[\frames] == "wchoose8m1"} {[400000, -1].wchoose([9/10, 1/10])}
+							{args[\frames] == "full"} {-1};
 
-			~pbuf6.send([\bufn, 3*nodeIndex +1], nodeIndex);
-			("playing buffer ----"+ ~kbuf[3*nodeIndex +1].bufnum +"----"+ PathName(~kbuf[3*nodeIndex +1].path).fileName).postln;
-			~kbufRead.value(3*nodeIndex +2, key: ~folderKey[nodeIndex]);
-			(~kbuf[3*nodeIndex +1].duration - ~pbuf6FadeTime/2).wait;
 
-				if(~stop[nodeIndex].test == true) { break.value(999) };
+						);
 
-			~pbuf6.send([\bufn, 3*nodeIndex +2], nodeIndex);
-			("playing buffer ----"+ ~kbuf[3*nodeIndex +2].bufnum +"----"+ PathName(~kbuf[3*nodeIndex +2].path).fileName).postln;
-			~kbufRead.value(3*nodeIndex +0, key: ~folderKey[nodeIndex]);
-			(~kbuf[3*nodeIndex +2].duration - ~pbuf6FadeTime/2).wait;
+						w = case
+						{args[\waiting] == "bufdur"} {(~kbuf[3*nodeIndex +0].duration - ~pbuf6FadeTime/2)}
+						{args[\waiting] == "rand"} {(rand(2.5) + 3.5)};
 
-				if(~stop[nodeIndex].test == true) { break.value(999) };
+						w.wait;
 
-		};
-		};
-		~pbuf6AvailableNodes.add(nodeIndex);
-		("Ending Task at node group " + ~pbuf6.nodeID + " instance " + nodeIndex).postln;
+						if(~stop[nodeIndex].test == true) { break.value(999) };
+
+						//("Working" + [1, 2].wchoose([args[\wch], 1 - args[\wch]])).postln;
+
+
+						~pbuf6.send([\bufn, 3*nodeIndex +1], nodeIndex);
+						("playing buffer ----"+
+							~kbuf[3*nodeIndex +1].bufnum +"----"+
+							~kbuf[3*nodeIndex +1].duration + "s " +
+							PathName(~kbuf[3*nodeIndex +1].path).fileName).postln;
+
+						~kbufRead.value(3*nodeIndex +2,
+							key: ~folderKey[nodeIndex],
+							frames: case
+							{args[\frames] == "wchoose8m1"} {[400000, -1].wchoose([9/10, 1/10])}
+							{args[\frames] == "full"} {-1};
+
+						);
+
+						w = case
+						{args[\waiting] == "bufdur"} {(~kbuf[3*nodeIndex +1].duration - ~pbuf6FadeTime/2)}
+						{args[\waiting] == "rand"} {(rand(2.5) + 3.5)};
+
+						w.wait;
+
+
+						if(~stop[nodeIndex].test == true) { break.value(999) };
+
+
+						~pbuf6.send([\bufn, 3*nodeIndex +2], nodeIndex);
+						("playing buffer ----"+
+							~kbuf[3*nodeIndex +2].bufnum +"----"+
+							~kbuf[3*nodeIndex +2].duration + "s " +
+							PathName(~kbuf[3*nodeIndex +2].path).fileName).postln;
+
+						~kbufRead.value(3*nodeIndex +0,
+							key: ~folderKey[nodeIndex],
+							frames: case
+							{args[\frames] == "wchoose8m1"} {[400000, -1].wchoose([9/10, 1/10])}
+							{args[\frames] == "full"} {-1};
+
+						);
+
+
+						w = case
+						{args[\waiting] == "bufdur"} {(~kbuf[3*nodeIndex +2].duration - ~pbuf6FadeTime/2)}
+						{args[\waiting] == "rand"} {(rand(2.5) + 3.5)};
+
+						w.wait;
+
+
+						if(~stop[nodeIndex].test == true) { break.value(999) };
+
+					};
+				};
+				~pbuf6AvailableNodes.add(nodeIndex);
+				("Ending Task at node group " + ~pbuf6.nodeID + " instance " + nodeIndex).postln;
+			}
+		);
+
 
 	};
 
 );
-)
-~kbuf
-~pbuf6AvailableNodes
-(
 
+~pbufTdef1 = ~pbufTdef.copy(\BufStruct1);
+~pbufTdef2 = ~pbufTdef.copy(\BufStruct2);
+
+)
+
+
+
+(
+~keysTdef = Tdef(\choosekeys,
+	{|args|
+		loop {
+			30.do{|i|
+				~folderKey[i] = [args[\fkey1], args[\fkey2]].wchoose([args[\fkeych], 1-args[\fkeych]]);
+
+				//("Folder " + i + " was now set to " + ~folderKey[i]).postln;
+
+			};
+
+
+			"Folder keys are now set to: ".postln;
+			(~folderKey[0..4]).postln;
+			(~folderKey[5..9]).postln;
+			(~folderKey[10..14]).postln;
+			(~folderKey[15..19]).postln;
+			(~folderKey[20..24]).postln;
+			(~folderKey[25..29]).postln;
+			4.wait
+		};
+	};
+
+);
+~keysTdef.publish(\chooseKey);
+)
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
+//---------------------------------- Routines for 1st BufferStruct
+
+// \frames Control Options: 0 ==>
+
+//---------------------------------- Routine 1
+
+//-- Play randomly all 10 instances
+(
 {
-~folderKey[1] = \Vozes_Mistro;
-~folderKey[2] = \Tratados;
+	~pbufTdef1.set(\frames, "wchoose8m1", \waiting, "bufdur");
 
-~t1 = ~pbufTdef.fork;
-2.0.wait;
-~t2 = ~pbufTdef.fork;
-2.0.wait;
-~t3 = ~pbufTdef.fork;
 
-}.fork
+	//~folderKey[1] = \Vozes_Mistro;
+	//~folderKey[2] = \Tratados;
+	//~folderKey[6] = \VOZ_LUANA;
+	//~folderKey[7] = \MADRIGAL_materiais;
+	//~folderKey[3] = \Silence;
+
+	10.do{~pbufTdef1.fork; 2.0.wait;};
+
+}.fork;
 )
-~t4 = ~pbufTdef.fork
+//-- Stop Routine 1
 (
-~stop[0].test = true;
-~stop[1].test = true;
-~stop[2].test = true;
-
+10.do{|i| ~stop[i].test = true};
 )
 
-~stop[6].test
+//-- Reset available nodes if necessary
+~pbuf6AvailableNodes;
+~availableNodesReset.value;
+
+//-- Check Main NDef sources
+~pbuf6.source.do(_.postcs);
+
+//---------------------------------- Routine 2
+
 (
-~pbufTdef.stop;
+{
+	90.do{|i| ~kbufRead.value(i)};
+	1.wait;
+	30.do{|i| ~folderKey[i] = \Silence;};
+
+	~pbufTdef2.set(\frames, "full", \waiting, "bufdur");
+	1.do{~pbufTdef2.fork; 0.4.wait;};
+
+	~keysTdef.set(\fkey1, \Silence, \fkey2, \Short, \fkeych, 1);
+	~choosekeys = ~keysTdef.fork;
+
+
+}.fork;
+)
+
+~kbufRead.value(0, \Short)
+
+~pbuf6.send([\bufn, 0], 0)
+
+
+//-- Stop Routine 2
+
+(
+30.do{|i| ~stop[i].test = true};
+~choosekeys.stop;
+)
+~pbuf6AvailableNodes;
+~availableNodesReset.value;
+
+~testTdef =  Tdef(\kl, {|args| loop{[1, 2].wchoose([args[\de], 1 - args[\de]]).postln; 1.0.wait}})
+
+~df = ~testTdef.fork
+~df.stop
+
+~testTdef.stop
+
+~testTdef.set(\de, 3);
+
+~testTdef.publish(\testee)
+/////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////
+(
+~pbufTdef1.stop;
 ~availableNodesReset.value;
 ~pbuf6AvailableNodes
 )
+~pbufTdef1.gui
 
 
-~pbufTdef.reset;
-~pbufTdef.next;
 
-~pbuf6[0].play
 ~ctrl_pos
 ~ctrl_pos.source = ~modulatorNdef;
 ~ctrl_pos.source = ~mouseXNdef.source;
 ~ctrl_pos.source = ~lfnoiseNdef.source;
 
-j.play;
-j.reset;
-j.stop;
-~pbuf6.source.do(_.postcs);
+
+
 PathName("../Sons/Ceramicas_Amanda/Vassoura_Urna-G_KM-164_04.wav").folderName
 //--------------------------- Controlling parameters
-
+~pbufTdef1.controlKeys
 ~pbuf6.controlKeys;
 rand(10.0)
 ~as = \asd
@@ -450,7 +612,36 @@ a.sources.do(_.postcs);
 a.send; // exchange synths, using the sources as definitions
 a.clear;
 
-/////////////////////////////////////////////////////////////////////////////////////////////////
+
+Array.fill(10, {{MouseX.kr.poll(2)}.play})
+
+l={ Poll.kr(Impulse.kr(10), Line.kr(0, 1, 1), \test) }.play(s);
+l.stop
+a = {MouseX.kr}.defer
+a.value
+
+[1, 2].wchoose([a, 1-a])
+
+Bus
+
+
+r = Tdef(\r, {|args| {0.2*SinOsc.ar(freq: args[\f])}.play})
+
+v = Ndef(\v, {MouseX.kr(300, 500)});
+
+
+r.set(\f, 540)
+r.play
+
+
+
+NodeProxy
+
+~pbufTdef2.fork;
+
+~pathsDict[\Silence]
+
+///////////////////////////////////////////////////////////////////////////////////////
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
