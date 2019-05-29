@@ -33,6 +33,15 @@ Patches/SC/04Rotinas.scd
 Patches/SC/05Gravacao.scd
 Patches/SC/06Sequenciando.scd
 Patches/SC/BufGen_PECA_MONACO_studio_A.sc
-Sons/Short/
-Sons/Tratados/
+
+
+Sons/Attack_Short
+Sons/Attack_Long
+Sons/Attack_UltraShort
+Sons/Vassoura_Short
+Sons/Silence
+
+Silence.wav
+
+Sons/Tratados
 

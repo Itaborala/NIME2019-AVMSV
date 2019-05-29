@@ -1,4 +1,4 @@
-#N canvas 1 41 958 1015 10;
+#N canvas 1 41 958 1038 10;
 #X obj 150 313 osc~;
 #X obj 187 316 osc~;
 #X obj 222 323 osc~;
@@ -57,7 +57,6 @@
 #X obj 454 139 list trim;
 #X obj 535 171 netsend -u -b;
 #X msg 658 121 connect localhost 7600;
-#X obj 150 574 vbap;
 #X connect 0 0 4 0;
 #X connect 1 0 5 0;
 #X connect 2 0 6 0;

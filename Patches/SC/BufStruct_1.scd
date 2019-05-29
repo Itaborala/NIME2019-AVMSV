@@ -48,6 +48,7 @@ x.free
 
 
 (
+~folder = "../Sons";
 ~pathsDict = Dictionary.new;
 PathName(~folder).entries.do{
 	arg subfolder;
@@ -108,7 +109,7 @@ PathName(~folder).entries.do{
 (
 Ndef.new(\playbuf6).ar(6);
 ~pbuf6 = Ndef(\playbuf6);
-~pbuf6FadeTime = 1;
+~pbuf6FadeTime = 0.7;
 )
 
 //--- Declaring NodeProxy sources at all instances
@@ -119,12 +120,12 @@ Ndef.new(\playbuf6).ar(6);
 
 		var sig;
 
-		sig = PlayBuf.ar(1, \bufn.kr(0), rate: rand(0.3) + 7.5, doneAction:2);
+		sig = PlayBuf.ar(1, \bufn.kr(0), rate: \rate.kr(1.0), doneAction:0);//rand(0.3) + 7.5,
 
 		sig = PanAz.ar(6,
 			in: sig,
 			pos: LFNoise2.kr(1),
-			level: (rand(0.5)+0.5),
+			level: \amp.kr(1.0),
 			orientation: \orientation.kr(-3.0)
 		);
 
@@ -210,7 +211,7 @@ c = {
 	arg buf;
 	buf.close;
 
-	("reading buffer:" + buf).postln;
+	//("reading buffer:" + buf).postln;
 	//~pbufTdef
 
 };
@@ -246,7 +247,7 @@ c = {
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 //---------------------------------- Buffer Structure source
-rand
+
 ~kbuf[0].duration
 (
 ~pbufTdef = Tdef(\BufStruct,
@@ -265,7 +266,7 @@ rand
 			{ ("All group instances taken!!").postln},
 
 			{
-				//~pbuf6.play;
+				~pbuf6.play;
 				("Task Running at node group " + ~pbuf6.nodeID + " instance " + nodeIndex).postln;
 				~stop[nodeIndex].test = false;
 
@@ -274,7 +275,25 @@ rand
 					inf.do{
 
 
-						~pbuf6.send([\bufn, 3*nodeIndex +0], nodeIndex);
+						~pbuf6.send([
+							\bufn, 3*nodeIndex +0,
+							\rate, case
+							{args[\vel] == "static1"} {1}
+							{args[\vel] == "static7.5"} {7.5}
+							{args[\vel] == "RandL"} {rand(0.17) + 0.03}
+							{args[\vel] == "RandM"} {rand(0.3) + 0.85}
+							{args[\vel] == "RandH"} {rand(0.9) + 1.1}
+							{args[\vel] == "RandHH"} {rand(2) + 2}
+							{args[\vel] == "RandB"} {rand(1.95) + 0.05};,
+
+							\amp, case
+							{args[\mul] == "static1"} {1}
+							{args[\mul] == "Rand"} {rand(0.5) + 0.5};
+
+
+						], nodeIndex);
+
+
 						("playing buffer ----"+
 							~kbuf[3*nodeIndex +0].bufnum +"----"+
 							~kbuf[3*nodeIndex +2].duration + "s " +
@@ -291,7 +310,7 @@ rand
 
 						w = case
 						{args[\waiting] == "bufdur"} {(~kbuf[3*nodeIndex +0].duration - ~pbuf6FadeTime/2)}
-						{args[\waiting] == "rand"} {(rand(2.5) + 3.5)};
+						{args[\waiting] == "rand"} {(rand(2.5) + 4.2)};
 
 						w.wait;
 
@@ -300,7 +319,24 @@ rand
 						//("Working" + [1, 2].wchoose([args[\wch], 1 - args[\wch]])).postln;
 
 
-						~pbuf6.send([\bufn, 3*nodeIndex +1], nodeIndex);
+						~pbuf6.send([
+							\bufn, 3*nodeIndex +1,
+							\rate, case
+							{args[\vel] == "static1"} {1}
+							{args[\vel] == "static7.5"} {7.5}
+							{args[\vel] == "RandL"} {rand(0.17) + 0.03}
+							{args[\vel] == "RandM"} {rand(0.3) + 0.85}
+							{args[\vel] == "RandH"} {rand(0.9) + 1.1}
+							{args[\vel] == "RandHH"} {rand(2) + 2}
+							{args[\vel] == "RandB"} {rand(1.95) + 0.05};,
+
+							\amp, case
+							{args[\mul] == "static1"} {1}
+							{args[\mul] == "Rand"} {rand(0.5) + 0.5};
+
+
+						], nodeIndex);
+
 						("playing buffer ----"+
 							~kbuf[3*nodeIndex +1].bufnum +"----"+
 							~kbuf[3*nodeIndex +1].duration + "s " +
@@ -316,7 +352,7 @@ rand
 
 						w = case
 						{args[\waiting] == "bufdur"} {(~kbuf[3*nodeIndex +1].duration - ~pbuf6FadeTime/2)}
-						{args[\waiting] == "rand"} {(rand(2.5) + 3.5)};
+						{args[\waiting] == "rand"} {(rand(2.5) + 4.2)};
 
 						w.wait;
 
@@ -324,13 +360,29 @@ rand
 						if(~stop[nodeIndex].test == true) { break.value(999) };
 
 
-						~pbuf6.send([\bufn, 3*nodeIndex +2], nodeIndex);
+						~pbuf6.send([
+							\bufn, 3*nodeIndex +2,
+							\rate, case
+							{args[\vel] == "static1"} {1}
+							{args[\vel] == "static7.5"} {7.5}
+							{args[\vel] == "RandL"} {rand(0.17) + 0.03}
+							{args[\vel] == "RandM"} {rand(0.3) + 0.85}
+							{args[\vel] == "RandH"} {rand(0.9) + 1.1}
+							{args[\vel] == "RandHH"} {rand(2) + 0.9}
+							{args[\vel] == "RandB"} {rand(1.95) + 0.05};,
+
+							\amp, case
+							{args[\mul] == "static1"} {1}
+							{args[\mul] == "Rand"} {rand(0.5) + 0.5};
+
+
+						], nodeIndex);
 						("playing buffer ----"+
 							~kbuf[3*nodeIndex +2].bufnum +"----"+
 							~kbuf[3*nodeIndex +2].duration + "s " +
 							PathName(~kbuf[3*nodeIndex +2].path).fileName).postln;
 
-						~kbufRead.value(3*nodeIndex +0,
+						~kbufRead.value(3*nodeIndex + 0,
 							key: ~folderKey[nodeIndex],
 							frames: case
 							{args[\frames] == "wchoose8m1"} {[400000, -1].wchoose([9/10, 1/10])}
@@ -341,7 +393,7 @@ rand
 
 						w = case
 						{args[\waiting] == "bufdur"} {(~kbuf[3*nodeIndex +2].duration - ~pbuf6FadeTime/2)}
-						{args[\waiting] == "rand"} {(rand(2.5) + 3.5)};
+						{args[\waiting] == "rand"} {(rand(2.5) + 4.2)};
 
 						w.wait;
 
@@ -406,7 +458,7 @@ rand
 //-- Play randomly all 10 instances
 (
 {
-	~pbufTdef1.set(\frames, "wchoose8m1", \waiting, "bufdur");
+	~pbufTdef1.set(\frames, "wchoose8m1", \waiting, "bufdur", \vel, "static1", \mul, "static1");
 
 
 	//~folderKey[1] = \Vozes_Mistro;
@@ -439,15 +491,21 @@ rand
 	1.wait;
 	30.do{|i| ~folderKey[i] = \Silence;};
 
-	~pbufTdef2.set(\frames, "full", \waiting, "bufdur");
-	1.do{~pbufTdef2.fork; 0.4.wait;};
+	~pbufTdef2.set(\frames, "full", \waiting, "rand", \vel, "static1", \mul, "Rand");
+	30.do{~pbufTdef2.fork; 0.4.wait;};
 
-	~keysTdef.set(\fkey1, \Silence, \fkey2, \Short, \fkeych, 1);
+	~keysTdef.set(\fkey1, \Silence, \fkey2, \Attack_Short, \fkeych, 1);
 	~choosekeys = ~keysTdef.fork;
 
 
 }.fork;
 )
+
+~pbufTdef2.set(\vel, "RandH")
+~keysTdef.set(\fkey1, \Attack_Long);
+~keysTdef.set(\fkey1, \Silence);
+
+
 
 ~kbufRead.value(0, \Short)
 
