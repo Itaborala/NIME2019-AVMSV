@@ -7,8 +7,8 @@ s.options.numInputBusChannels = 2;
 
 
 //"SC_JACK_DEFAULT_INPUTS".setenv("system:capture_1,system:capture_2");
-//"SC_JACK_DEFAULT_OUTPUTS".setenv("Volume_Master:input_1,Volume_Master:input_2,Volume_Master:input_3,Volume_Master:input_4,Volume_Master:input_5,Volume_Master:input_6");
-"SC_JACK_DEFAULT_OUTPUTS".setenv("Headphones:playback_1,Headphones:playback_1,Headphones:playback_1,Headphones:playback_2,Headphones:playback_2,Headphones:playback_2,");
+"SC_JACK_DEFAULT_OUTPUTS".setenv("Volume_Master:input_1,Volume_Master:input_2,Volume_Master:input_3,Volume_Master:input_4,Volume_Master:input_5,Volume_Master:input_6");
+//"SC_JACK_DEFAULT_OUTPUTS".setenv("Headphones:playback_1,Headphones:playback_1,Headphones:playback_1,Headphones:playback_2,Headphones:playback_2,Headphones:playback_2,");
 
 
 )

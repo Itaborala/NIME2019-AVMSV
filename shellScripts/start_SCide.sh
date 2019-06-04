@@ -4,7 +4,7 @@ SC_WORKSPACE=2
 
 echo "scide Starting Up..."
 
-scide ../Patches/SC/AV-MSV.scd &
+scide ../Patches/SC/BufStruct_1.scd &
 
 sleep 2
 

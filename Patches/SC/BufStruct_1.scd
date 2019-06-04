@@ -7,7 +7,8 @@ s.options.numInputBusChannels = 2;
 
 
 //"SC_JACK_DEFAULT_INPUTS".setenv("system:capture_1,system:capture_2");
-"SC_JACK_DEFAULT_OUTPUTS".setenv("Volume_Master:input_1,Volume_Master:input_2,Volume_Master:input_3,Volume_Master:input_4,Volume_Master:input_5,Volume_Master:input_6");
+//"SC_JACK_DEFAULT_OUTPUTS".setenv("Volume_Master:input_1,Volume_Master:input_2,Volume_Master:input_3,Volume_Master:input_4,Volume_Master:input_5,Volume_Master:input_6");
+"SC_JACK_DEFAULT_OUTPUTS".setenv("Headphones:playback_1,Headphones:playback_1,Headphones:playback_1,Headphones:playback_2,Headphones:playback_2,Headphones:playback_2,");
 
 
 )
@@ -31,9 +32,16 @@ s.makeGui;
 
 x = {PanAz.ar(6, WhiteNoise.ar(0.05) , pos: MouseX.kr(-1, 1), orientation: -3.0)}.play
 x.free
-{Array.fill(1, PanAz.ar(3, {WhiteNoise.ar(0.1)}!2 , pos: MouseX.kr(-1, 1), orientation: -1.5)).reshape(6)}.play
 
-{Array.fill(1, PanAz.ar(1, {WhiteNoise.ar(0.1)}!6 , pos: MouseX.kr(-1, 1), orientation: -1.5)).reshape(6)}.play
+x = {Array.fill(1, PanAz.ar(3, {WhiteNoise.ar(0.1)}!2 , pos: MouseX.kr(-1, 1), orientation: -1.5)).reshape(6)}.play
+x.free
+
+x = {Array.fill(1, PanAz.ar(3, Pan2.ar(WhiteNoise.ar(0.1), MouseY.kr(-1, 1)) , pos: MouseX.kr(-1, 1), orientation: -1.5)).reshape(6)}.play
+x.free
+
+
+x = {Array.fill(1, PanAz.ar(1, {WhiteNoise.ar(0.1)}!6 , pos: MouseX.kr(-1, 1), orientation: -1.5)).reshape(6)}.play
+x.free
 
 
 //--------------------------------- Choosing SoundBank folder
@@ -59,6 +67,7 @@ PathName(~folder).entries.do{
 			{
 				arg i;
 				subfolder.entries[i].fullPath;
+
 			}
 		)
 	);
@@ -75,27 +84,35 @@ PathName(~folder).entries.do{
 //--- that are not being used
 
 ~pbuf6AvailableNodes = SortedList.new(8, function: {|a, b| a > b});
-30.do{arg i; ~pbuf6AvailableNodes.add(i); ~pbuf6AvailableNodes};
+~pbuf6AvailableNodes2 = SortedList.new(8, function: {|a, b| a > b});
+~pbuf6AvailableNodes3 = SortedList.new(8, function: {|a, b| a > b});
+70.do{arg i; ~pbuf6AvailableNodes.add(i); ~pbuf6AvailableNodes};
+10.do{arg i; ~pbuf6AvailableNodes2.add(i+70); ~pbuf6AvailableNodes2};
+10.do{arg i; ~pbuf6AvailableNodes3.add(i+80); ~pbuf6AvailableNodes3};
 ~pbuf6AvailableNodes;
 //~pbuf6AvailableNodes.clear
 
-~availableNodesReset = {~pbuf6AvailableNodes.clear; 30.do{arg i; ~pbuf6AvailableNodes.add(i)};};
+~availableNodesReset = {~pbuf6AvailableNodes.clear; 70.do{arg i; ~pbuf6AvailableNodes.add(i); ~pbuf6AvailableNodes}};
+~availableNodesReset2 = {~pbuf6AvailableNodes2.clear; 10.do{arg i; ~pbuf6AvailableNodes2.add(i+70); ~pbuf6AvailableNodes2}};
+~availableNodesReset3 = {~pbuf6AvailableNodes3.clear; 10.do{arg i; ~pbuf6AvailableNodes3.add(i+80); ~pbuf6AvailableNodes3}};
 
+	//10.do{arg i; ~pbuf6AvailableNodes2.add(i+70); ~pbuf6AvailableNodes2};
+	//10.do{arg i; ~pbuf6AvailableNodes3.add(i+80); ~pbuf6AvailableNodes3};)
 //--- Helps breaking the task loop properly
-~stop = Array.fill(30, Condition(false));
+~stop = Array.fill(90, Condition(false));
 ~stop;
 
 //--- Holds the subfolder keys that
 //--- will be read by each group respectively
-~folderKey = Array.fill(30, \Silence);
+~folderKey = Array.fill(90, \Silence);
 ~folderKey;
 
 //--- Stores All Buffers
 //~kbuf = Array.fill(90, {|i| Buffer.new(s, numFrames: 40000, numChannels: 1, bufnum: i)});
-~kbuf = Array.fill(90);
+~kbuf = Array.fill(270);
 
 //--- Stores Tdefs forks plus one to avoid overload
-~st1 = Array.fill(100);
+~st1 = Array.fill(300);
 
 
 )
@@ -109,12 +126,13 @@ PathName(~folder).entries.do{
 (
 Ndef.new(\playbuf6).ar(6);
 ~pbuf6 = Ndef(\playbuf6);
-~pbuf6FadeTime = 0.7;
+//~pbuf6FadeTime = 0.7;
+~pbuf6FadeTime = 2;
 )
 
 //--- Declaring NodeProxy sources at all instances
 (
-~pbuf6instances = 30.do{ arg i;
+~pbuf6instances = 70.do{ arg i;
 ~pbuf6.put(i,
 	{
 
@@ -124,8 +142,8 @@ Ndef.new(\playbuf6).ar(6);
 
 		sig = PanAz.ar(6,
 			in: sig,
-			pos: LFNoise2.kr(1),
-			level: \amp.kr(1.0),
+			pos: LFNoise2.kr(0.4),
+			level: \amp.kr(0.07),
 			orientation: \orientation.kr(-3.0)
 		);
 
@@ -138,6 +156,72 @@ Ndef.new(\playbuf6).ar(6);
 );
 }
 )
+
+(
+~pbuf6instances = 20.do{ arg i;
+~pbuf6.put(i + 70,
+		{
+			|bufn=0|
+			var sig, imp;
+
+
+			imp = LFNoise2.ar(\trigf.kr(2));
+
+			TGrains.ar(6, trigger: imp, bufnum: bufn, rate: TRand.kr(\rate.kr(1.0), 1.1*\rate.kr(1.0), imp),  centerPos: TRand.kr(0, BufDur.kr(bufn), imp), dur: 3, pan: WhiteNoise.kr(0.6) , amp: Rand(0.1, 0.3))
+
+		},
+
+		now: false
+);
+}
+)
+~pbuf6.send([\bufn, 210], 70)
+~pbuf6.set(\trigf, 0.7)
+
+~pbuf6.set(\rate, 5)
+
+(
+
+~pbuf6instances = 10.do{ arg i;
+~pbuf6.put(i + 80,
+	{
+
+		var sig;
+
+		sig = PlayBuf.ar(1, \bufn.kr(0), rate: \rate.kr(1.0), doneAction:0);//rand(0.3) + 7.5,
+
+		//sig = sig!2;
+		sig = Pan2.ar(sig, \pos2.kr(0.0));
+		//sig = [LPF.ar(sig, 150.0), HPF.ar(sig, 3000.0)];
+		//(sig = [LPF.ar(sig[0], \spkCF.kr(3150.0)), HPF.ar(sig[1], \cerCF.kr(2500.0), \cerAMP.kr(2.0))]);
+
+		sig = PanAz.ar(3,
+			in: sig,
+			pos: LFNoise2.kr(1),
+			level: \amp.kr(0.1),
+			orientation: \orientation.kr(-1.5)
+		);
+
+		//Reshaping
+
+		Array.fill(1, sig).reshape(6);
+	},
+
+	now: false
+);
+}
+)
+
+
+~kbufRead.value(0, \Vozes_Mistro)
+
+~pbuf6.map(\pos2, ~ctrl_pos);
+
+//~pbuf6.set(\spkCF, 1800.0, \cerCF, 2500.0, \cerAMP, 2.0)
+
+
+~pbuf6.send([\bufn, 9], 3)
+
 ~pbuf6.sources
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -167,7 +251,7 @@ Ndef.new(\playbuf6).ar(6);
 ~ctrl_pos = Ndef(\control_pos, ~modulatorNdef.source);
 
 )
-
+~ctrl_pos.source = ~mouseXNdef.source
 
 //---------------------------------- NDefPresets
 
@@ -228,7 +312,7 @@ c = {
 
 	~kbuf[bufn] = Buffer.read(s,
 		path: ~pathsDict[key].wchoose(1/len !len ),
-		startFrame: rand(1000),
+		startFrame: rand(3000),
 		numFrames: frames,
 		action: c,
 		bufnum: bufn;
@@ -241,12 +325,17 @@ c = {
 //-- You need to initialize all the available
 //-- buffers before forking routines and tasks
 
-90.do{|i| ~kbufRead.value(i)};
-~kbuf
+270.do{|i| ~kbufRead.value(i)};
+~kbuf[210]
 
+~kbufRead.value(210, key: \Tratados)
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 //---------------------------------- Buffer Structure source
+~pbuf6.send([\bufn, 210], 70)
+~kbuf[3*70]
+
+
 
 ~kbuf[0].duration
 (
@@ -260,7 +349,11 @@ c = {
 		//~pbuf6.map(\pos, nil);
 		//~pbuf6.map(\pos, ~ctrl_pos);
 
-		nodeIndex = ~pbuf6AvailableNodes.pop;
+		//nodeIndex = ~pbuf6AvailableNodes.pop;
+
+		nodeIndex = args[\avnodes].pop;
+
+
 
 		if(nodeIndex == nil,
 			{ ("All group instances taken!!").postln},
@@ -282,13 +375,15 @@ c = {
 							{args[\vel] == "static7.5"} {7.5}
 							{args[\vel] == "RandL"} {rand(0.17) + 0.03}
 							{args[\vel] == "RandM"} {rand(0.3) + 0.85}
+							{args[\vel] == "RandMM"} {rand(0.1) + 0.95}
 							{args[\vel] == "RandH"} {rand(0.9) + 1.1}
 							{args[\vel] == "RandHH"} {rand(2) + 2}
 							{args[\vel] == "RandB"} {rand(1.95) + 0.05};,
 
 							\amp, case
-							{args[\mul] == "static1"} {1}
-							{args[\mul] == "Rand"} {rand(0.5) + 0.5};
+							{args[\mul] == "static1"} {0.1}
+							{args[\mul] == "Rand"} {rand(0.3)};
+							//{args[\mul] == "Rand"} {rand(0.5) + 0.5};
 
 
 						], nodeIndex);
@@ -310,7 +405,8 @@ c = {
 
 						w = case
 						{args[\waiting] == "bufdur"} {(~kbuf[3*nodeIndex +0].duration - ~pbuf6FadeTime/2)}
-						{args[\waiting] == "rand"} {(rand(2.5) + 4.2)};
+						{args[\waiting] == "rand"} {(rand(2.6) + 1.6)}
+						{args[\waiting] == "randL"} {(rand(10) + 1.6)};
 
 						w.wait;
 
@@ -326,13 +422,15 @@ c = {
 							{args[\vel] == "static7.5"} {7.5}
 							{args[\vel] == "RandL"} {rand(0.17) + 0.03}
 							{args[\vel] == "RandM"} {rand(0.3) + 0.85}
+							{args[\vel] == "RandMM"} {rand(0.1) + 0.95}
 							{args[\vel] == "RandH"} {rand(0.9) + 1.1}
 							{args[\vel] == "RandHH"} {rand(2) + 2}
 							{args[\vel] == "RandB"} {rand(1.95) + 0.05};,
 
 							\amp, case
-							{args[\mul] == "static1"} {1}
-							{args[\mul] == "Rand"} {rand(0.5) + 0.5};
+							{args[\mul] == "static1"} {0.1}
+							{args[\mul] == "Rand"} {rand(0.3)};
+							//{args[\mul] == "Rand"} {rand(0.5) + 0.5};
 
 
 						], nodeIndex);
@@ -352,7 +450,8 @@ c = {
 
 						w = case
 						{args[\waiting] == "bufdur"} {(~kbuf[3*nodeIndex +1].duration - ~pbuf6FadeTime/2)}
-						{args[\waiting] == "rand"} {(rand(2.5) + 4.2)};
+						{args[\waiting] == "rand"} {(rand(2.6) + 1.6)}
+						{args[\waiting] == "randL"} {(rand(10) + 1.6)};
 
 						w.wait;
 
@@ -367,13 +466,15 @@ c = {
 							{args[\vel] == "static7.5"} {7.5}
 							{args[\vel] == "RandL"} {rand(0.17) + 0.03}
 							{args[\vel] == "RandM"} {rand(0.3) + 0.85}
+							{args[\vel] == "RandMM"} {rand(0.1) + 0.95}
 							{args[\vel] == "RandH"} {rand(0.9) + 1.1}
 							{args[\vel] == "RandHH"} {rand(2) + 0.9}
 							{args[\vel] == "RandB"} {rand(1.95) + 0.05};,
 
 							\amp, case
-							{args[\mul] == "static1"} {1}
-							{args[\mul] == "Rand"} {rand(0.5) + 0.5};
+							{args[\mul] == "static1"} {0.1}
+							{args[\mul] == "Rand"} {rand(0.3)};
+							//{args[\mul] == "Rand"} {rand(0.5) + 0.5};
 
 
 						], nodeIndex);
@@ -393,7 +494,8 @@ c = {
 
 						w = case
 						{args[\waiting] == "bufdur"} {(~kbuf[3*nodeIndex +2].duration - ~pbuf6FadeTime/2)}
-						{args[\waiting] == "rand"} {(rand(2.5) + 4.2)};
+						{args[\waiting] == "rand"} {(rand(2.6) + 1.6)}
+						{args[\waiting] == "randL"} {(rand(10) + 1.6)};
 
 						w.wait;
 
@@ -414,6 +516,8 @@ c = {
 
 ~pbufTdef1 = ~pbufTdef.copy(\BufStruct1);
 ~pbufTdef2 = ~pbufTdef.copy(\BufStruct2);
+~pbufTdef3 = ~pbufTdef.copy(\BufStruct3);
+~pbufTdef4 = ~pbufTdef.copy(\BufStruct4);
 
 )
 
@@ -423,21 +527,40 @@ c = {
 ~keysTdef = Tdef(\choosekeys,
 	{|args|
 		loop {
-			30.do{|i|
-				~folderKey[i] = [args[\fkey1], args[\fkey2]].wchoose([args[\fkeych], 1-args[\fkeych]]);
+			90.do{|i|
 
-				//("Folder " + i + " was now set to " + ~folderKey[i]).postln;
+
+				~folderKey[i] = case
+				{args[\type] == 0} {[args[\fkey1], args[\fkey2]].wchoose([1 - args[\fkeych], args[\fkeych]])}
+				{args[\type] == 1} {[args[\fkey1], args[\fkey2], args[\fkey3], args[\fkey4], args[\fkey5]].wchoose([args[\fkeych1], args[\fkeych2], args[\fkeych3], args[\fkeych4], args[\fkeych5]])};
+
+
+
 
 			};
 
 
 			"Folder keys are now set to: ".postln;
+			//(args[\fkeych]).postln
 			(~folderKey[0..4]).postln;
 			(~folderKey[5..9]).postln;
 			(~folderKey[10..14]).postln;
 			(~folderKey[15..19]).postln;
 			(~folderKey[20..24]).postln;
 			(~folderKey[25..29]).postln;
+			(~folderKey[30..34]).postln;
+			(~folderKey[35..39]).postln;
+			(~folderKey[40..44]).postln;
+			(~folderKey[45..49]).postln;
+			(~folderKey[50..54]).postln;
+			(~folderKey[55..59]).postln;
+			(~folderKey[60..64]).postln;
+			(~folderKey[65..69]).postln;
+			(~folderKey[70..74]).postln;
+			(~folderKey[75..79]).postln;
+			(~folderKey[80..84]).postln;
+			(~folderKey[85..89]).postln;
+
 			4.wait
 		};
 	};
@@ -446,6 +569,9 @@ c = {
 ~keysTdef.publish(\chooseKey);
 )
 
+~keysTdef.set(\type, 0, \fkey1, \Silence, \fkey2, \Attack_Short, \fkeych, 1);
+~choosekeys = ~keysTdef.fork;
+~choosekeys.stop
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -487,39 +613,152 @@ c = {
 
 (
 {
-	90.do{|i| ~kbufRead.value(i)};
-	1.wait;
-	30.do{|i| ~folderKey[i] = \Silence;};
+	270.do{|i| ~kbufRead.value(i)};
+	1.2.wait;
+	90.do{|i| ~folderKey[i] = \Silence;};
 
-	~pbufTdef2.set(\frames, "full", \waiting, "rand", \vel, "static1", \mul, "Rand");
+	~pbufTdef2.set(\frames, "full", \waiting, "rand", \vel, "static7.5", \mul, "static1");
 	30.do{~pbufTdef2.fork; 0.4.wait;};
 
-	~keysTdef.set(\fkey1, \Silence, \fkey2, \Attack_Short, \fkeych, 1);
+
+	~keysTdef.set(\type, 0, \fkey1, \Silence, \fkey2, \Ockegen_Long, \fkeych, 0);
+
 	~choosekeys = ~keysTdef.fork;
 
 
 }.fork;
 )
 
-~pbufTdef2.set(\vel, "RandH")
-~keysTdef.set(\fkey1, \Attack_Long);
-~keysTdef.set(\fkey1, \Silence);
-
-
-
-~kbufRead.value(0, \Short)
-
-~pbuf6.send([\bufn, 0], 0)
-
-
 //-- Stop Routine 2
 
 (
-30.do{|i| ~stop[i].test = true};
+{
+90.do{|i| ~stop[i].test = true};
 ~choosekeys.stop;
+25.wait;
+(~pbuf6AvailableNodes.size + "intances ended correctly.").postln;
+}.fork;
 )
-~pbuf6AvailableNodes;
+~pbuf6AvailableNodes.size;
 ~availableNodesReset.value;
+
+
+
+~pbufTdef2.set(\vel, "RandM")
+~pbufTdef2.set(\mul, "static1")
+~pbufTdef2.set(\waiting, "rand");
+~keysTdef.set(\fkey1, \Attack_Short);
+~keysTdef.set(\fkey1, \Tratados);
+~keysTdef.set(\fkey1, \Silence);
+
+//---------------------------------- Routine 3  **************************** DIA 1
+
+(
+{
+	30.do{|i| ~kbufRead.value(i)};
+	1.2.wait;
+	10.do{|i| ~folderKey[i] = \Silence;};
+
+	~pbufTdef1.set(\avnodes, ~pbuf6AvailableNodes, \frames, "full", \waiting, "bufdur", \vel, "RandL", \mul, "static1");
+	4.do{~pbufTdef1.fork; 0.4.wait;};
+
+	~pbufTdef2.set(\avnodes, ~pbuf6AvailableNodes, \frames, "full", \waiting, "bufdur", \vel, "RandMM", \mul, "static1");
+	5.do{~pbufTdef2.fork; 0.4.wait;};
+
+	~pbufTdef3.set(\avnodes, ~pbuf6AvailableNodes, \frames, "full", \waiting, "randL", \vel, "RandL", \mul, "static1");
+	1.do{~pbufTdef3.fork; 0.4.wait;};
+
+	//~pbufTdef3.set(\frames, "full", \waiting, "bufdur", \vel, "static1", \mul, "Rand");
+	//3.do{~pbufTdef3.fork; 0.4.wait;};
+	~keysTdef.set(\type, 1,
+		\fkey1, \Silence,
+		\fkey2, \Ockegen_Long,
+		\fkey3, \Mistro_Long,
+		\fkey4, \Luana_Long,
+		\fkey5, \Madrigale_Long,
+		\fkeych1, 1,
+		\fkeych2, 0,
+		\fkeych3, 0,
+		\fkeych4, 0,
+		\fkeych5, 0
+	);
+
+	~choosekeys = ~keysTdef.fork;
+
+
+}.fork;
+)
+
+//-- Stop Routine 3
+
+(
+{
+6.do{|i| ~stop[i].test = true};
+~choosekeys.
+
+	stop;
+2.wait;
+//(~pbuf6AvailableNodes.size + "intances ended correctly.").postln;
+}.fork;
+)
+~pbuf6AvailableNodes.size;
+~availableNodesReset.value;
+
+
+
+~pbufTdef2.set(\vel, "static7.5")
+~pbufTdef2.set(\waiting, "rand");
+~keysTdef.set(\fkey1, \Attack_Short);
+~keysTdef.set(\fkey1, \Tratados);
+~keysTdef.set(\fkey1, \Silence);
+
+~choosekeys = ~keysTdef.fork;
+
+//---------------------------------- Routine 4
+
+(
+{
+	10.do{|i| ~kbufRead.value(i+70)};
+	1.2.wait;
+	10.do{|i| ~folderKey[i+70] = \Silence;};
+
+	~pbufTdef4.set(\avnodes, ~pbuf6AvailableNodes2, \frames, "full", \waiting, "bufdur", \vel, "static1", \mul, "static1");
+	10.do{~pbufTdef4.fork; 0.4.wait;};
+
+	~keysTdef.set(\type, 0, \fkey1, \Silence, \fkey2, \Tratados, \fkeych, 0);
+	~choosekeys = ~keysTdef.fork;
+
+
+}.fork;
+)
+
+//-- Stop Routine 4
+
+(
+{
+10.do{|i| ~stop[i+70].test = true};
+~choosekeys.stop;
+//25.wait;
+//(~pbuf6AvailableNodes.size + "intances ended correctly.").postln;
+}.fork;
+)
+~pbuf6AvailableNodes.size;
+~availableNodesReset2.value;
+~pbuf6AvailableNodes2
+
+
+~pbufTdef4.set(\vel, "RandL")
+~pbufTdef2.set(\mul, "Rand")
+~pbufTdef2.set(\waiting, "rand");
+~keysTdef.set(\fkey1, \Attack_Short);
+~keysTdef.set(\fkey1, \Tratados);
+~keysTdef.set(\fkey1, \Silence);
+
+
+~kbufRead.value(0, \Vozes_Mistro)
+
+~pbuf6.send([\bufn, 0], 0)
+
 
 ~testTdef =  Tdef(\kl, {|args| loop{[1, 2].wchoose([args[\de], 1 - args[\de]]).postln; 1.0.wait}})
 
